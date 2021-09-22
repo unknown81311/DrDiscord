@@ -9,7 +9,7 @@ export default class Logger {
      */
     logging({
         type = "log", 
-        title = DrApi.name, 
+        title = DrApi.name.full, 
         input = undefined, 
         color = "red"
     }) {

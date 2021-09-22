@@ -2,7 +2,6 @@
  * @module WebpackModules
  * @version 0.0.1
  */
-
 export default class WebpackModules {
     /**
      * getModule
@@ -14,23 +13,23 @@ export default class WebpackModules {
         const webpackExports = (typeof window.webpackJsonp === "function") ?
             window.webpackJsonp([],{ "__extra_id__": (module, _export_, req) => { _export_.default = req } },[ "__extra_id__" ]).default :
             window.webpackJsonp.push( [[],{ "__extra_id__": (_module_, exports, req) => { _module_.exports = req } },[ [ "__extra_id__" ] ] ]) 
-        for (const ite in webpackExports.c) {
-            if (Object.hasOwnProperty.call(webpackExports.c, ite)) {
-                let ele = webpackExports.c[ite]
+        for(let ite in webpackExports.c) {
+            if(Object.hasOwnProperty.call(webpackExports.c, ite)) {
+                let ele = webpackExports.c[ite].exports
                 if(!ele) continue
-                if(ele.__esModule && e.default) ele = ele.default
-                if(filter(ele)) return (ele.exports.default === undefined) ? ele.exports : ele.exports.default
+                if(ele.__esModule && ele.default) ele = ele.default
+                if(filter(ele)) return ele
             }
         }
         if (!first) {
-            for (const ite of webpackExports.m) {
+            for (let ite of webpackExports.m) {
                 try {
-                    let module = webpackExports(ite)
-                    if(!module) continue
-                    if(module.__esModule && module.default) module = module.default
-                    if(filter(module)) return module
+                    let modu = webpackExports(ite)
+                    if(!modu) continue
+                    if(modu.__esModule && m.default) modu = modu.default
+                    if(filter(modu)) return modu
                 }
-                catch (e) {}
+                catch (e) { }
             }
         }
         return null
@@ -41,10 +40,7 @@ export default class WebpackModules {
      * @returns {Any}
      */
     get getByProps() {
-        return (...props) => this.getModule(module => {
-            if (props?.every(prop => module?.exports[prop] === undefined)) return false
-            return true
-        }, true)
+        return (...props) => this.getModule(module => props.every(prop => module[prop] !== undefined), true)
     }
     /**
      * Finds a single module using its own props
@@ -55,7 +51,7 @@ export default class WebpackModules {
         return (displayName) => this.getModule(module => {
             if (module.exports?.default?.displayName === displayName) return true
             return false
-        })
+        }, true)
     }
     /**
      * Finds a single module using its own prototype
@@ -64,29 +60,13 @@ export default class WebpackModules {
      */
     get getByPrototypes() {
         return (...prototypes) => {
-            const filterer = (fields, filter = m => m) => {
-                return module => {
-                    const component = filter(module.exports);
-                    if (!component) return false;
-                    if (!component.prototype) return false;
-                    for (let f = 0; f < fields.length; f++) {
-                        if (component.prototype[fields[f]] === undefined) return false;
-                    }
-                    return true;
-                }
-            }
-            return this.getModule(filterer(prototypes), true)
+            return this.getModule((module, filter = m => m) => {
+                const component = filter(module)
+                if (!component) return false
+                if (!component.prototype) return false
+                for (let f = 0; f < prototypes.length; f++) if (component.prototype[prototypes[f]] === undefined) return false
+                return true
+            }, true)
         }
-    }
-    /**
-     * Finds a single module using its id
-     * @param  {string} number The id
-     * @returns {Any}
-     */
-    get getById() {
-        return (number) => this.getModule(module => {
-            if (module.i === number) return true
-            return false
-        })
     }
 }

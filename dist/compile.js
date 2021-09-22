@@ -3,7 +3,7 @@
   var Logger = class {
     logging({
       type = "log",
-      title = DrApi.name,
+      title = DrApi.name.full,
       input = void 0,
       color = "red"
     }) {
@@ -32,47 +32,56 @@
     }
   };
 
+  // src/util/info.js
+  var Info = class {
+    get name() {
+      return {
+        full: "Discord Re-envisioned",
+        short: "DrDiscord"
+      };
+    }
+    get version() {
+      return "1.0.0";
+    }
+  };
+
   // src/modules/webpackmodules.js
   var WebpackModules = class {
-    getModule(filter = (m) => m, first = true) {
+    getModule(filter = (m2) => m2, first = true) {
       const webpackExports = typeof window.webpackJsonp === "function" ? window.webpackJsonp([], { "__extra_id__": (module, _export_, req) => {
         _export_.default = req;
       } }, ["__extra_id__"]).default : window.webpackJsonp.push([[], { "__extra_id__": (_module_, exports, req) => {
         _module_.exports = req;
       } }, [["__extra_id__"]]]);
-      for (const ite in webpackExports.c) {
+      for (let ite in webpackExports.c) {
         if (Object.hasOwnProperty.call(webpackExports.c, ite)) {
-          let ele = webpackExports.c[ite];
+          let ele = webpackExports.c[ite].exports;
           if (!ele)
             continue;
-          if (ele.__esModule && e.default)
+          if (ele.__esModule && ele.default)
             ele = ele.default;
           if (filter(ele))
-            return ele.exports.default === void 0 ? ele.exports : ele.exports.default;
+            return ele;
         }
       }
       if (!first) {
-        for (const ite of webpackExports.m) {
+        for (let ite of webpackExports.m) {
           try {
-            let module = webpackExports(ite);
-            if (!module)
+            let modu = webpackExports(ite);
+            if (!modu)
               continue;
-            if (module.__esModule && module.default)
-              module = module.default;
-            if (filter(module))
-              return module;
-          } catch (e2) {
+            if (modu.__esModule && m.default)
+              modu = modu.default;
+            if (filter(modu))
+              return modu;
+          } catch (e) {
           }
         }
       }
       return null;
     }
     get getByProps() {
-      return (...props) => this.getModule((module) => {
-        if (props?.every((prop) => module?.exports[prop] === void 0))
-          return false;
-        return true;
-      }, true);
+      return (...props) => this.getModule((module) => props.every((prop) => module[prop] !== void 0));
     }
     get getByDisplayName() {
       return (displayName) => this.getModule((module) => {
@@ -83,29 +92,18 @@
     }
     get getByPrototypes() {
       return (...prototypes) => {
-        const filterer = (fields, filter = (m) => m) => {
-          return (module) => {
-            const component = filter(module.exports);
-            if (!component)
+        return this.getModule((module, filter = (m2) => m2) => {
+          const component = filter(module);
+          if (!component)
+            return false;
+          if (!component.prototype)
+            return false;
+          for (let f = 0; f < prototypes.length; f++)
+            if (component.prototype[prototypes[f]] === void 0)
               return false;
-            if (!component.prototype)
-              return false;
-            for (let f = 0; f < fields.length; f++) {
-              if (component.prototype[fields[f]] === void 0)
-                return false;
-            }
-            return true;
-          };
-        };
-        return this.getModule(filterer(prototypes), true);
-      };
-    }
-    get getById() {
-      return (number) => this.getModule((module) => {
-        if (module.i === number)
           return true;
-        return false;
-      });
+        }, true);
+      };
     }
   };
 
@@ -120,32 +118,37 @@
     }
   };
 
+  // src/modules/patcher.js
+  var Patcher = class {
+  };
+
   // src/index.js
   window = typeof unsafeWindow === "undefined" ? window : unsafeWindow;
   var api = {
     Logger: new Logger(),
     WebpackModules: new WebpackModules(),
     DiscordModules: new DiscordModules(),
+    Patcher: new Patcher(),
+    Info: new Info(),
     localStorage: () => {
       const frame = document.createElement("frame");
       frame.src = "about:blank";
       document.body.appendChild(frame);
-      let r = Object.getOwnPropertyDescriptor(frame.contentWindow, "localStorage");
+      let r = Object.defineProperty(window, "localStorage", Object.getOwnPropertyDescriptor(frame.contentWindow, "localStorage"));
       frame.remove();
-      Object.defineProperty(window, "localStorage", r);
       r = window.localStorage;
       delete window.localStorage;
       return r;
     }
   };
+  api.Logger.log(`${api.Info.name.short}-Api`, "Has fully loaded");
   window.DrApi = {
-    name: "Discord Re-envisioned",
-    version: "0.0.1",
+    info: api.Info,
     Logger: api.Logger,
     WebpackModules: api.WebpackModules,
     DiscordModules: api.DiscordModules,
-    localStorage: api.localStorage(),
-    api
+    Patcher: api.Patcher,
+    localStorage: api.localStorage()
   };
-  api.Logger.log(DrApi.name, "Has fully loaded");
+  api.Logger.log(`${api.Info.name.short}-${api.Info.version}`, "Has fully loaded");
 })();
