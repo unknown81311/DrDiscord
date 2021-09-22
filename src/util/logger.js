@@ -1,4 +1,3 @@
-"use strict"
 /**
  * @module logger
  * @version 0.0.1

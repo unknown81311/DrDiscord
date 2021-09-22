@@ -1,4 +1,3 @@
-"use strict"
 import logger from "./util/logger"
 import webpackmodules from "./modules/webpackmodules"
 import discordmodules from "./modules/discordmodules"

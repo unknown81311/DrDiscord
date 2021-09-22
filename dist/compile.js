@@ -1,6 +1,5 @@
 (() => {
   // src/util/logger.js
-  "use strict";
   var Logger = class {
     logging({
       type = "log",
@@ -34,7 +33,6 @@
   };
 
   // src/modules/webpackmodules.js
-  "use strict";
   var WebpackModules = class {
     getModule(filter = (m) => m, first = true) {
       const webpackExports = typeof window.webpackJsonp === "function" ? window.webpackJsonp([], { "__extra_id__": (module, _export_, req) => {
@@ -112,7 +110,6 @@
   };
 
   // src/modules/discordmodules.js
-  "use strict";
   var WebpackModules2 = new WebpackModules();
   var DiscordModules = class {
     get React() {
@@ -124,7 +121,6 @@
   };
 
   // src/index.js
-  "use strict";
   window = typeof unsafeWindow === "undefined" ? window : unsafeWindow;
   var api = {
     Logger: new Logger(),
