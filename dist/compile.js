@@ -11,6 +11,7 @@
       console[type](`%c[${title}]%c`, `font-weight: bold; color: ${color}`, "", typeof input === "object" ? [...input][0] : input);
     }
     get log() {
+      return (title, ...logs) => this.logging({
         type: "log",
         title,
         input: logs
