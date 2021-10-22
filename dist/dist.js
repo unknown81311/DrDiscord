@@ -2,18 +2,22 @@
   // modules/modules.js
   function getAllModules() {
     function webpackExport() {
-      if (typeof window.webpackJsonp === "function") {
-        return window.webpackJsonp([], { "__extra_id__": (module, _export_, req) => {
-          _export_.default = req;
-        } }, ["__extra_id__"]).default;
+      if (typeof window.webpackChunkdiscord_app === "undefined") {
+        if (typeof window.webpackJsonp === "function") {
+          return window.webpackJsonp([], { "__extra_id__": (module, _export_, req) => {
+            _export_.default = req;
+          } }, ["__extra_id__"]).default;
+        } else {
+          return window.webpackJsonp.push([
+            [],
+            { "__extra_id__": (_module_, exports, req) => {
+              _module_.exports = req;
+            } },
+            [["__extra_id__"]]
+          ]);
+        }
       } else {
-        return window.webpackJsonp.push([
-          [],
-          { "__extra_id__": (_module_, exports, req) => {
-            _module_.exports = req;
-          } },
-          [["__extra_id__"]]
-        ]);
+        console.log("L");
       }
     }
     return webpackExport();
@@ -106,6 +110,48 @@
       input: errors
     });
   }
+
+  // modules/localstorage.js
+  function localStorage() {
+    if (window.localStorage === void 0) {
+      const frame = document.createElement("frame");
+      frame.src = "about:blank";
+      document.body.appendChild(frame);
+      let r = Object.getOwnPropertyDescriptor(frame.contentWindow, "localStorage");
+      frame.remove();
+      Object.defineProperty(window, "localStorage", r);
+      r = window.localStorage;
+      delete window.localStorage;
+      return r;
+    }
+    return window.localStorage;
+  }
+  function getData(pluginName, key, defaultValue) {
+    const local = localStorage();
+    let DrDiscordStorage = JSON.parse(local.getItem("DrDiscordStorage"));
+    if (typeof DrDiscordStorage["PluginData"] == "undefined")
+      DrDiscordStorage["PluginData"] = {};
+    if (typeof DrDiscordStorage["PluginData"][pluginName] == "undefined")
+      DrDiscordStorage["PluginData"][pluginName] = {};
+    local.setItem("DrDiscordStorage", JSON.stringify(DrDiscordStorage));
+    return DrDiscordStorage["PluginData"]?.[pluginName]?.[key] ?? defaultValue;
+  }
+  function setData(pluginName, key, value) {
+    const local = localStorage();
+    let DrDiscordStorage = JSON.parse(local.getItem("DrDiscordStorage"));
+    if (typeof DrDiscordStorage["PluginData"] == "undefined")
+      DrDiscordStorage["PluginData"] = {};
+    if (typeof DrDiscordStorage["PluginData"][pluginName] == "undefined")
+      DrDiscordStorage["PluginData"][pluginName] = {};
+    DrDiscordStorage["PluginData"][pluginName][key] = value;
+    local.setItem("DrDiscordStorage", JSON.stringify(DrDiscordStorage));
+  }
+  var storage = {
+    localStorage: localStorage(),
+    setData,
+    getData
+  };
+  var localstorage_default = storage;
 
   // modules/discordmodules.js
   var memoizeObject = (object) => {
@@ -623,6 +669,7 @@
     },
     React,
     ReactDOM,
+    storage: localstorage_default,
     Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
     modals: { showConfirmationModal, alert }
   };

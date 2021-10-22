@@ -1,5 +1,10 @@
 import { findModuleByProps, findModuleByDisplayName, React } from "../modules/modules"
-
+/**
+ * showConfirmationModal
+ * @param {string} title 
+ * @param {probably:ReactElement} content 
+ * @param {object} options 
+ */
 async function showConfirmationModal(title, content, options = {}) {
   const Markdown = findModuleByDisplayName("Markdown")
   const ConfirmationModal = findModuleByDisplayName("ConfirmModal")
@@ -25,7 +30,12 @@ async function showConfirmationModal(title, content, options = {}) {
     }, props), content)
   }, {modalKey: key})
 }
-
+/**
+ * alert
+ * @param {string} title 
+ * @param {probably:ReactElement} content
+ * @deprecated
+ */
 async function alert(title, children) {return showConfirmationModal(title, children, { cancelText: null })}
 
 export { showConfirmationModal, alert }

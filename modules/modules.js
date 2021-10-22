@@ -1,21 +1,31 @@
 function getAllModules() {
   function webpackExport() {
-    if (typeof window.webpackJsonp === "function") {
-      return window.webpackJsonp([],
-        {"__extra_id__": (module, _export_, req) => { _export_.default = req }}, 
-        [ "__extra_id__"]
-      ).default
-    } 
+    if (typeof window.webpackChunkdiscord_app === 'undefined') {
+      if (typeof window.webpackJsonp === "function") {
+        return window.webpackJsonp([],
+          {"__extra_id__": (module, _export_, req) => { _export_.default = req }}, 
+          [ "__extra_id__"]
+        ).default
+      } 
+      else {
+        return window.webpackJsonp.push([[],
+          {"__extra_id__": (_module_, exports, req) => { _module_.exports = req }}, 
+          [["__extra_id__"]]
+        ])
+      }
+    }
     else {
-      return window.webpackJsonp.push([[],
-        {"__extra_id__": (_module_, exports, req) => { _module_.exports = req }}, 
-        [["__extra_id__"]]
-      ])
+      console.log("L");
     }
   }
   return webpackExport()
 }
 
+/**
+ * @name findAllModules
+ * @param {function} filter 
+ * @returns modules
+ */
 function findAllModules(filter = (m => m)) {
   let modules = []
   const webpackExports = getAllModules()
@@ -28,7 +38,11 @@ function findAllModules(filter = (m => m)) {
   }
   return modules
 }
-
+/**
+ * @name findModule
+ * @param {function} filter 
+ * @returns module
+ */
 function findModule(filter = (m => m)) {
   const modules = findAllModules()
   for(let ite in modules) {
@@ -37,7 +51,11 @@ function findModule(filter = (m => m)) {
   }
   return undefined
 }
-
+/**
+ * @name findModuleByDisplayName
+ * @param {string} displayName 
+ * @returns module
+ */
 function findModuleByDisplayName(displayName) {
   return findModule((module, filter = e => e) => {
     const component = filter(module)
@@ -46,7 +64,11 @@ function findModuleByDisplayName(displayName) {
     return undefined
   }).default
 }
-
+/**
+ * @name findModuleByProps
+ * @param  {...strings} props 
+ * @returns module
+ */
 function findModuleByProps(...props) {
   const nonDefualt = findModule((module, filter = e => e) => {
     const component = filter(module)
@@ -68,7 +90,10 @@ function findModuleByProps(...props) {
 
   return nonDefualt !== undefined ? nonDefualt : isDefualt.default
 }
-
+/**
+ * @name React
+ * @description React stuff
+ */
 const React = findModuleByProps("createElement", "Fragment")
 const ReactDOM = findModuleByProps("render", "findDOMNode")
 

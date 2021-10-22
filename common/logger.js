@@ -6,6 +6,11 @@ function logging({
 }) {
   console[type](`%c[${title}]%c`, `font-weight: bold; color: ${color}`, "", (typeof input === "object") ? [...input][0] : input)
 }
+/**
+ * @name log
+ * @param {string} title 
+ * @param  {...any} logs 
+ */
 function log(title, ...logs) {
   logging({
     type: "log", 
@@ -13,6 +18,11 @@ function log(title, ...logs) {
     input: logs
   })
 }
+/**
+ * @name warn
+ * @param {string} title 
+ * @param  {...any} warns 
+ */
 function warn(title, ...warns) {
   logging({
     type: "warn", 
@@ -20,6 +30,11 @@ function warn(title, ...warns) {
     input: warns
   })
 }
+/**
+ * @name error
+ * @param {string} title 
+ * @param  {...any} errors 
+ */
 function error(title, ...errors) {
   logging({
     type: "error", 

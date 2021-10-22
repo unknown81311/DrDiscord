@@ -11,6 +11,7 @@ import {
   log, 
   warn, error 
 } from "./common/logger"
+import storage from "./modules/localstorage"
 import Patcher from "./modules/patcher"
 import { 
   showConfirmationModal, 
@@ -27,7 +28,7 @@ window.DrApi = {
     version: "1.0.0",
     shortName: "DrDiscord"
   },
-  React, ReactDOM,
+  React, ReactDOM, storage,
   Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches},
   modals: { showConfirmationModal, alert }
 }
