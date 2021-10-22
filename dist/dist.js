@@ -78,7 +78,7 @@
       if (!component)
         return void 0;
       for (let p = 0; p < props.length; p++)
-        if (component[props] !== void 0)
+        if (component[props[p]] !== void 0)
           return module;
       return void 0;
     });
@@ -94,7 +94,7 @@
     });
     return nonDefualt !== void 0 ? nonDefualt : isDefualt?.default;
   }
-  var React = findModuleByProps("createElement", "Fragment");
+  var React = findModuleByProps("createElement");
   var ReactDOM = findModuleByProps("render", "findDOMNode");
 
   // common/logger.js

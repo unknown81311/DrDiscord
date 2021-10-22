@@ -94,7 +94,7 @@ function findModuleByProps(...props) {
     const component = filter(module)
     if (!component) return undefined
     for (let p = 0; p < props.length; p++)
-      if (component[props] !== undefined) return module
+      if (component[props[p]] !== undefined) return module
     return undefined
   })
   const isDefualt = findModule((module, filter = e => e) => {
@@ -111,7 +111,7 @@ function findModuleByProps(...props) {
  * @name React
  * @description React stuff
  */
-const React = findModuleByProps("createElement", "Fragment")
+const React = findModuleByProps("createElement")
 const ReactDOM = findModuleByProps("render", "findDOMNode")
 
 export { findModule, findModuleByProps, findModuleByDisplayName, findAllModules, getAllModules, React, ReactDOM }
