@@ -16,9 +16,8 @@
             [["__extra_id__"]]
           ]);
         }
-      } else {
-        console.log("L");
-      }
+      } else
+        window.alert(`Discord Re-envisioned is currently broken on canary`);
     }
     return webpackExport();
   }

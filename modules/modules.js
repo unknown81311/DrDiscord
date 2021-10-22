@@ -14,13 +14,10 @@ function getAllModules() {
         ])
       }
     }
-    else {
-      console.log("L");
-    }
+    else window.alert(`Discord Re-envisioned is currently broken on canary`)
   }
   return webpackExport()
 }
-
 /**
  * @name findAllModules
  * @param {function} filter 

@@ -34,7 +34,7 @@ async function showConfirmationModal(title, content, options = {}) {
  * alert
  * @param {string} title 
  * @param {probably:ReactElement} content
- * @deprecated
+ * @description May be removed soon
  */
 async function alert(title, children) {return showConfirmationModal(title, children, { cancelText: null })}
 

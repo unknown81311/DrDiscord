@@ -29,7 +29,7 @@ window.DrApi = {
     shortName: "DrDiscord"
   },
   React, ReactDOM, storage,
-  Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches},
+  Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
   modals: { showConfirmationModal, alert }
 }
 
