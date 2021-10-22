@@ -14,7 +14,27 @@ function getAllModules() {
         ])
       }
     }
-    else window.alert(`Discord Re-envisioned is currently broken on canary`)
+    else {
+      // credit to creatable from Cumcord for being incredibly based and epic
+      function getModules(chunkName) {
+        randomId = Math.random().toString(36).substring(7);
+      
+        let modules = [];
+      
+        window[chunkName].push([
+          [randomId],
+          {},
+          (e) => {
+            for (let module in e.m) {
+              modules.push(e([module]));
+            }
+          },
+        ]);
+        
+        return modules;
+      }
+      return getModules("webpackChunkdiscord_app")
+    }
   }
   return webpackExport()
 }
@@ -24,16 +44,19 @@ function getAllModules() {
  * @returns modules
  */
 function findAllModules(filter = (m => m)) {
-  let modules = []
-  const webpackExports = getAllModules()
-  for(let ite in webpackExports.c) {
-    if(Object.hasOwnProperty.call(webpackExports.c, ite)) {
-      let ele = webpackExports.c[ite].exports
-      if(!ele) continue
-      if(filter(ele)) modules.push(ele)
+  if (window.webpackChunkdiscord_app === undefined) {
+    let modules = []
+    const webpackExports = getAllModules()
+    for(let ite in webpackExports.c) {
+      if(Object.hasOwnProperty.call(webpackExports.c, ite)) {
+        let ele = webpackExports.c[ite].exports
+        if(!ele) continue
+        if(filter(ele)) modules.push(ele)
+      }
     }
+    return modules
   }
-  return modules
+  return getAllModules()
 }
 /**
  * @name findModule
@@ -71,21 +94,18 @@ function findModuleByProps(...props) {
     const component = filter(module)
     if (!component) return undefined
     for (let p = 0; p < props.length; p++)
-      if (component[props[p]] !== undefined) return module
-
+      if (component[props] !== undefined) return module
     return undefined
   })
   const isDefualt = findModule((module, filter = e => e) => {
     const component = filter(module)
     if (!component) return undefined
-
     if (component.default !== undefined)
       if (component.default[props] !== undefined) return module
-      
     return undefined
   })
 
-  return nonDefualt !== undefined ? nonDefualt : isDefualt.default
+  return nonDefualt !== undefined ? nonDefualt : isDefualt?.default
 }
 /**
  * @name React

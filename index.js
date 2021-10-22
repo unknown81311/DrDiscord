@@ -7,16 +7,10 @@ import {
   React, 
   ReactDOM 
 } from "./modules/modules"
-import { 
-  log, 
-  warn, error 
-} from "./common/logger"
-import storage from "./modules/localstorage"
+import { log, warn, error } from "./common/logger"
+import storage from "./modules/storage"
 import Patcher from "./modules/patcher"
-import { 
-  showConfirmationModal, 
-  alert 
-} from "./ui/modals"
+import { showConfirmationModal, alert } from "./ui/modals"
 
 const { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches } = Patcher
 

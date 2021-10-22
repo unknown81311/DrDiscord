@@ -16,24 +16,42 @@
             [["__extra_id__"]]
           ]);
         }
-      } else
-        window.alert(`Discord Re-envisioned is currently broken on canary`);
+      } else {
+        let getModules = function(chunkName) {
+          randomId = Math.random().toString(36).substring(7);
+          let modules = [];
+          window[chunkName].push([
+            [randomId],
+            {},
+            (e) => {
+              for (let module in e.m) {
+                modules.push(e([module]));
+              }
+            }
+          ]);
+          return modules;
+        };
+        return getModules("webpackChunkdiscord_app");
+      }
     }
     return webpackExport();
   }
   function findAllModules(filter = (m) => m) {
-    let modules = [];
-    const webpackExports = getAllModules();
-    for (let ite in webpackExports.c) {
-      if (Object.hasOwnProperty.call(webpackExports.c, ite)) {
-        let ele = webpackExports.c[ite].exports;
-        if (!ele)
-          continue;
-        if (filter(ele))
-          modules.push(ele);
+    if (window.webpackChunkdiscord_app === void 0) {
+      let modules = [];
+      const webpackExports = getAllModules();
+      for (let ite in webpackExports.c) {
+        if (Object.hasOwnProperty.call(webpackExports.c, ite)) {
+          let ele = webpackExports.c[ite].exports;
+          if (!ele)
+            continue;
+          if (filter(ele))
+            modules.push(ele);
+        }
       }
+      return modules;
     }
-    return modules;
+    return getAllModules();
   }
   function findModule(filter = (m) => m) {
     const modules = findAllModules();
@@ -60,7 +78,7 @@
       if (!component)
         return void 0;
       for (let p = 0; p < props.length; p++)
-        if (component[props[p]] !== void 0)
+        if (component[props] !== void 0)
           return module;
       return void 0;
     });
@@ -74,7 +92,7 @@
       }
       return void 0;
     });
-    return nonDefualt !== void 0 ? nonDefualt : isDefualt.default;
+    return nonDefualt !== void 0 ? nonDefualt : isDefualt?.default;
   }
   var React = findModuleByProps("createElement", "Fragment");
   var ReactDOM = findModuleByProps("render", "findDOMNode");
@@ -110,7 +128,7 @@
     });
   }
 
-  // modules/localstorage.js
+  // modules/storage.js
   function localStorage() {
     if (window.localStorage === void 0) {
       const frame = document.createElement("frame");
@@ -150,10 +168,10 @@
     setData,
     getData
   };
-  var localstorage_default = storage;
+  var storage_default = storage;
 
   // modules/discordmodules.js
-  var memoizeObject = (object) => {
+  function memoizeObject(object) {
     const proxy = new Proxy(object, {
       get: function(obj, mod) {
         if (!obj.hasOwnProperty(mod))
@@ -172,11 +190,13 @@
         return obj[mod];
       }
     });
-    Object.defineProperty(proxy, "hasOwnProperty", { value: function(prop) {
-      return this[prop] !== void 0;
-    } });
+    Object.defineProperty(proxy, "hasOwnProperty", {
+      value: function(prop) {
+        return this[prop] !== void 0;
+      }
+    });
     return proxy;
-  };
+  }
   var discordmodules_default = memoizeObject({
     get React() {
       return DrApi.findModuleByProps("createElement", "cloneElement");
@@ -668,7 +688,7 @@
     },
     React,
     ReactDOM,
-    storage: localstorage_default,
+    storage: storage_default,
     Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
     modals: { showConfirmationModal, alert }
   };
