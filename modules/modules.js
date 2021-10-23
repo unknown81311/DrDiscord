@@ -88,4 +88,4 @@ function findModuleByProps(...props) {
 const React = findModuleByProps("createElement")
 const ReactDOM = findModuleByProps("render", "findDOMNode")
 
-export { findModule, findModuleByProps, findModuleByDisplayName, findAllModules, getAllModules, React, ReactDOM }
+export { findModule, findModuleByProps, findModuleByDisplayName, findAllModules, React, ReactDOM }

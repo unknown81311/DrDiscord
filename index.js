@@ -3,7 +3,6 @@ import {
   findModuleByProps, 
   findModuleByDisplayName, 
   findAllModules, 
-  getAllModules, 
   React, 
   ReactDOM 
 } from "./modules/modules"
@@ -15,7 +14,7 @@ import { showConfirmationModal, alert } from "./ui/modals"
 const { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches } = Patcher
 
 window.DrApi = {
-  modules: {findModule, findModuleByProps, findModuleByDisplayName, findAllModules, getAllModules},
+  modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules },
   logger: { log, warn, error },
   info: {
     name: "Discord Re-envisioned",
@@ -27,4 +26,4 @@ window.DrApi = {
   modals: { showConfirmationModal, alert }
 }
 
-log(DrApi.info.shortName, "Everything fully loaded")
+log(DrApi.info.name, "Everything fully loaded")

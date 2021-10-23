@@ -1,3 +1,5 @@
+import { error, warn } from "../common/logger";
+
 function localStorage() {
   if (!window.localstorage) {
     const frame = document.createElement("frame")
@@ -19,7 +21,9 @@ function localStorage() {
  * @param {any} defaultValue 
  * @returns data
  */
-function getData(pluginName, key, defaultValue) {
+function getData(pluginName, key, defaultValue = undefined) {
+  if (!pluginName || !key) return error("getData", "You need 2 args, 'pluginName', 'key'")
+  if (!defaultValue) warn("getData", "You should store a default value")
   const local = localStorage()
   let DrDiscordStorage = JSON.parse(local.getItem("DrDiscordStorage"))
   if (typeof DrDiscordStorage["PluginData"] == "undefined") DrDiscordStorage["PluginData"] = {}
@@ -34,6 +38,7 @@ function getData(pluginName, key, defaultValue) {
  * @param {any} value 
  */
 function setData(pluginName, key, value) {
+  if (!pluginName || !key || !value) return error("setData", "You need 3 args, 'pluginName', 'key', and 'value'")
   const local = localStorage()
   let DrDiscordStorage = JSON.parse(local.getItem("DrDiscordStorage"))
   if (typeof DrDiscordStorage["PluginData"] == "undefined") DrDiscordStorage["PluginData"] = {}

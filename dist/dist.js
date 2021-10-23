@@ -128,7 +128,11 @@
     }
     return window.localStorage;
   }
-  function getData(pluginName, key, defaultValue) {
+  function getData(pluginName, key, defaultValue = void 0) {
+    if (!pluginName || !key)
+      return error("getData", "You need 2 args, 'pluginName', 'key'");
+    if (!defaultValue)
+      warn("getData", "You should store a default value");
     const local = localStorage();
     let DrDiscordStorage = JSON.parse(local.getItem("DrDiscordStorage"));
     if (typeof DrDiscordStorage["PluginData"] == "undefined")
@@ -139,6 +143,8 @@
     return DrDiscordStorage["PluginData"]?.[pluginName]?.[key] ?? defaultValue;
   }
   function setData(pluginName, key, value) {
+    if (!pluginName || !key || !value)
+      return error("setData", "You need 3 args, 'pluginName', 'key', and 'value'");
     const local = localStorage();
     let DrDiscordStorage = JSON.parse(local.getItem("DrDiscordStorage"));
     if (typeof DrDiscordStorage["PluginData"] == "undefined")
@@ -327,7 +333,7 @@
   // index.js
   var { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches } = Patcher;
   window.DrApi = {
-    modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules, getAllModules },
+    modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules },
     logger: { log, warn, error },
     info: {
       name: "Discord Re-envisioned",
@@ -340,5 +346,5 @@
     Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
     modals: { showConfirmationModal, alert }
   };
-  log(DrApi.info.shortName, "Everything fully loaded");
+  log(DrApi.info.name, "Everything fully loaded");
 })();
