@@ -316,7 +316,7 @@
     return ModalActions.openModal((props) => {
       return React.createElement(ConfirmModal, Object.assign({
         header: title,
-        confirmButtonColor: danger ? Buttons.ButtonColors.BRAND : Buttons.ButtonColors.BRAND,
+        confirmButtonColor: danger ? Buttons.ButtonColors.RED : Buttons.ButtonColors.BRAND,
         confirmText,
         cancelText,
         onConfirm,
