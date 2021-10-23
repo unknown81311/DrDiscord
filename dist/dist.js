@@ -315,7 +315,7 @@
     content = content.map((c) => typeof c === "string" ? React.createElement(Markdown, null, c) : c);
     return ModalActions.openModal((props) => {
       return React.createElement(ConfirmModal, Object.assign({
-        header: "title",
+        header: title,
         confirmButtonColor: danger ? Buttons.ButtonColors.BRAND : Buttons.ButtonColors.BRAND,
         confirmText,
         cancelText,
