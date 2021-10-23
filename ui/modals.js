@@ -1,4 +1,4 @@
-import { findModuleByProps, findModuleByDisplayName, React } from "../modules/modules"
+import { findModuleByProps, findModuleByDisplayName, findModule, React } from "../modules/modules"
 /**
  * showConfirmationModal
  * @param {string} title 
@@ -6,28 +6,28 @@ import { findModuleByProps, findModuleByDisplayName, React } from "../modules/mo
  * @param {object} options 
  */
 async function showConfirmationModal(title, content, options = {}) {
-  const Markdown = findModuleByDisplayName("Markdown")
-  const ConfirmationModal = findModuleByDisplayName("ConfirmModal")
-  const ModalActions = findModuleByProps("openModal")
+  const Markdown = findModule(m => m.displayName === "Markdown" && m.rules)
+  const ConfirmModal = findModuleByDisplayName("ConfirmModal")
+  const ModalActions = findModuleByProps("openModalLazy")
   const Buttons = findModuleByProps("ButtonColors")
   const { Messages } = findModuleByProps("Messages")
-  if (!ModalActions || !ConfirmationModal || !Markdown) return this.default(title, content)
+  if (!ModalActions || !ConfirmModal || !Markdown) return this.default(title, content)
 
   const emptyFunction = () => {}
-  const {onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = Messages.OKAY, cancelText = Messages.CANCEL, danger = false, key = undefined} = options
+  const {onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = "Messages.OKAY", cancelText = "Messages.CANCEL", danger = false, key = undefined} = options
 
   if (!Array.isArray(content)) content = [content]
   content = content.map(c => typeof(c) === "string" ? React.createElement(Markdown, null, c) : c)
 
   return ModalActions.openModal(props => {
-    return React.createElement(ConfirmationModal, Object.assign({
-      header: title,
-      confirmButtonColor: danger ? Buttons.ButtonColors.RED : Buttons.ButtonColors.BRAND,
-      confirmText: confirmText,
-      cancelText: cancelText,
-      onConfirm: onConfirm,
-      onCancel: onCancel
-    }, props), content)
+    return React.createElement(ConfirmModal, Object.assign({
+      header: "title",
+      confirmButtonColor: danger ? Buttons.ButtonColors.BRAND : Buttons.ButtonColors.BRAND,
+      confirmText,
+      cancelText,
+      onConfirm,
+      onCancel
+    }, props), "content")
   }, {modalKey: key})
 }
 /**

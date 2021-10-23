@@ -1,42 +1,15 @@
 function getAllModules() {
-  function webpackExport() {
-    if (typeof window.webpackChunkdiscord_app === 'undefined') {
-      if (typeof window.webpackJsonp === "function") {
-        return window.webpackJsonp([],
-          {"__extra_id__": (module, _export_, req) => { _export_.default = req }}, 
-          [ "__extra_id__"]
-        ).default
-      } 
-      else {
-        return window.webpackJsonp.push([[],
-          {"__extra_id__": (_module_, exports, req) => { _module_.exports = req }}, 
-          [["__extra_id__"]]
-        ])
-      }
-    }
-    else {
-      // credit to creatable from Cumcord for being incredibly based and epic
-      function getModules(chunkName) {
-        randomId = Math.random().toString(36).substring(7);
-      
-        let modules = [];
-      
-        window[chunkName].push([
-          [randomId],
-          {},
-          (e) => {
-            for (let module in e.m) {
-              modules.push(e([module]));
-            }
-          },
-        ]);
-        
-        return modules;
-      }
-      return getModules("webpackChunkdiscord_app")
-    }
+  const chunkers = ["webpackJsonp", "webpackChunkdiscord_app"]
+  for (let chunky of chunkers) {
+    const chunk = window[chunky]
+    if (!chunk) continue
+    let modules
+    if(chunky == chunkers[0])
+      modules = chunk.push([[],{"__extra_id__": (_module_, exports, req) => { _module_.exports = req }}, [["__extra_id__"]]]) 
+    if(chunky == chunkers[1])
+      chunk.push([[Math.random().toString(36).substring(7)],{},(e) => modules = e]) 
+    return modules
   }
-  return webpackExport()
 }
 /**
  * @name findAllModules
@@ -44,19 +17,16 @@ function getAllModules() {
  * @returns modules
  */
 function findAllModules(filter = (m => m)) {
-  if (window.webpackChunkdiscord_app === undefined) {
-    let modules = []
-    const webpackExports = getAllModules()
-    for(let ite in webpackExports.c) {
-      if(Object.hasOwnProperty.call(webpackExports.c, ite)) {
-        let ele = webpackExports.c[ite].exports
-        if(!ele) continue
-        if(filter(ele)) modules.push(ele)
-      }
+  let modules = []
+  const webpackExports = getAllModules()
+  for(let ite in webpackExports.c) {
+    if(Object.hasOwnProperty.call(webpackExports.c, ite)) {
+      let ele = webpackExports.c[ite].exports
+      if(!ele) continue
+      if(filter(ele)) modules.push(ele)
     }
-    return modules
   }
-  return getAllModules()
+  return modules
 }
 /**
  * @name findModule
@@ -77,12 +47,14 @@ function findModule(filter = (m => m)) {
  * @returns module
  */
 function findModuleByDisplayName(displayName) {
-  return findModule((module, filter = e => e) => {
+  const module = findModule((mod, filter = e => e) => {
     const component = filter(module)
     if (!component) return undefined
-    if (module?.default?.displayName === displayName) return module
+    if (mod?.default?.displayName === displayName) return mod
     return undefined
-  }).default
+  })
+  if (!module?.default) return undefined
+  return module.default
 }
 /**
  * @name findModuleByProps
@@ -100,11 +72,13 @@ function findModuleByProps(...props) {
   const isDefualt = findModule((module, filter = e => e) => {
     const component = filter(module)
     if (!component) return undefined
-    if (component.default !== undefined)
-      if (component.default[props] !== undefined) return module
+    if (!component.default) return undefined
+    for (let p = 0; p < props.length; p++) {
+      if (!component.default[props[p]]) return undefined
+      return module
+    }
     return undefined
   })
-
   return nonDefualt !== undefined ? nonDefualt : isDefualt?.default
 }
 /**

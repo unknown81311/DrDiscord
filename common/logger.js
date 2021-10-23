@@ -1,10 +1,9 @@
 function logging({
   type = "log", 
   title = DrApi.info.shortName, 
-  input = undefined, 
-  color = "red"
+  input = undefined
 }) {
-  console[type](`%c[${title}]%c`, `font-weight: bold; color: ${color}`, "", (typeof input === "object") ? [...input][0] : input)
+  console[type](`%c[${title}]%c`, ["font-weight: bold", type === "log" && "color: red"].join(";"), "", (typeof input === "object") ? [...input][0] : input)
 }
 /**
  * @name log
@@ -15,7 +14,8 @@ function log(title, ...logs) {
   logging({
     type: "log", 
     title: title, 
-    input: logs
+    input: logs,
+    color: "#001BEB"
   })
 }
 /**
@@ -27,7 +27,8 @@ function warn(title, ...warns) {
   logging({
     type: "warn", 
     title: title, 
-    input: warns
+    input: warns,
+    color: "#E3C710"
   })
 }
 /**
@@ -39,7 +40,8 @@ function error(title, ...errors) {
   logging({
     type: "error", 
     title: title, 
-    input: errors
+    input: errors,
+    color: "#DB1860"
   })
 }
 

@@ -6,7 +6,6 @@
  */
 
 import { error } from "../common/logger"
-import DiscordModules from "./discordmodules"
 import { findModuleByProps } from "./modules"
 
 export default class Patcher {
@@ -27,7 +26,6 @@ export default class Patcher {
   }
   static resolveModule(module) {
     if (!module || typeof(module) === "function" || (typeof(module) === "object" && !Array.isArray(module))) return module
-    if (typeof module === "string") return DiscordModules[module]
     if (Array.isArray(module)) return findModuleByProps(module)
     return null
   }
