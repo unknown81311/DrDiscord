@@ -11,7 +11,6 @@ async function showConfirmationModal(title, content, options = {}) {
   const ModalActions = findModuleByProps("openModalLazy")
   const Buttons = findModuleByProps("ButtonColors")
   const { Messages } = findModuleByProps("Messages")
-  if (!ModalActions || !ConfirmModal || !Markdown) return this.default(title, content)
 
   const emptyFunction = () => {}
   const {onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = "Messages.OKAY", cancelText = "Messages.CANCEL", danger = false, key = undefined} = options

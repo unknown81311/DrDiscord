@@ -47,14 +47,14 @@ function findModule(filter = (m => m)) {
  * @returns module
  */
 function findModuleByDisplayName(displayName) {
-  const module = findModule((mod, filter = e => e) => {
+  const mod = findModule((module, filter = e => e) => {
     const component = filter(module)
     if (!component) return undefined
-    if (mod?.default?.displayName === displayName) return mod
+    if (module?.default?.displayName === displayName) return module
     return undefined
   })
-  if (!module?.default) return undefined
-  return module.default
+  if (!mod?.default) return undefined
+  return mod.default
 }
 /**
  * @name findModuleByProps
@@ -88,4 +88,4 @@ function findModuleByProps(...props) {
 const React = findModuleByProps("createElement")
 const ReactDOM = findModuleByProps("render", "findDOMNode")
 
-export { findModule, findModuleByProps, findModuleByDisplayName, findAllModules, React, ReactDOM }
+export { findModule, findModuleByProps, findModuleByDisplayName, findAllModules, getAllModules, React, ReactDOM }

@@ -40,17 +40,17 @@
     return void 0;
   }
   function findModuleByDisplayName(displayName) {
-    const module = findModule((mod, filter = (e) => e) => {
+    const mod = findModule((module, filter = (e) => e) => {
       const component = filter(module);
       if (!component)
         return void 0;
-      if (mod?.default?.displayName === displayName)
-        return mod;
+      if (module?.default?.displayName === displayName)
+        return module;
       return void 0;
     });
-    if (!module?.default)
+    if (!mod?.default)
       return void 0;
-    return module.default;
+    return mod.default;
   }
   function findModuleByProps(...props) {
     const nonDefualt = findModule((module, filter = (e) => e) => {
@@ -307,8 +307,6 @@
     const ModalActions = findModuleByProps("openModalLazy");
     const Buttons = findModuleByProps("ButtonColors");
     const { Messages } = findModuleByProps("Messages");
-    if (!ModalActions || !ConfirmModal || !Markdown)
-      return this.default(title, content);
     const emptyFunction = () => {
     };
     const { onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = "Messages.OKAY", cancelText = "Messages.CANCEL", danger = false, key = void 0 } = options;
