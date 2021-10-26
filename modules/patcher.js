@@ -6,9 +6,8 @@
  */
 
 import { error } from "../common/logger"
-import { findModuleByProps } from "./modules"
 
-export default class Patcher {
+class Patcher {
   static get patches() {return this._patches || (this._patches = [])}
   static getPatchesByCaller(name) {
     if (!name) return []
@@ -23,11 +22,6 @@ export default class Patcher {
   static unpatchAll(patches) {
     if (typeof patches === "string") patches = this.getPatchesByCaller(patches)
     for (const patch of patches) patch.unpatch()
-  }
-  static resolveModule(module) {
-    if (!module || typeof(module) === "function" || (typeof(module) === "object" && !Array.isArray(module))) return module
-    if (Array.isArray(module)) return findModuleByProps(module)
-    return null
   }
   static makeOverride(patch) {
     return function () {
@@ -96,7 +90,7 @@ export default class Patcher {
       type = "after", 
       forcePatch = true
     } = options
-    const module = this.resolveModule(moduleToPatch)
+    const module = moduleToPatch
     if (!module) return null
     if (!module[functionName] && forcePatch) module[functionName] = function() {}
     if (!(module[functionName] instanceof Function)) return null
@@ -128,3 +122,4 @@ export default class Patcher {
   static after(caller, moduleToPatch, functionName, callback, options = {}) {return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, {type: "after"}))}
   static instead(caller, moduleToPatch, functionName, callback, options = {}) {return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, {type: "instead"}))}
 }
+export default Patcher

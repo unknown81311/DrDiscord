@@ -10,8 +10,6 @@ import { log, warn, error } from "./common/logger"
 import storage from "./modules/storage"
 import Patcher from "./modules/patcher"
 
-const { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches } = Patcher
-
 window.DrApi = {
   modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules },
   logger: { log, warn, error },
@@ -21,7 +19,7 @@ window.DrApi = {
     shortName: "DrDiscord"
   },
   React, ReactDOM, storage,
-  Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
+  Patcher,
 }
 
 log(DrApi.info.name, "Everything fully loaded")

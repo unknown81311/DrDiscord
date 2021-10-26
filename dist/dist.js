@@ -36,10 +36,14 @@
     return void 0;
   }
   function findModuleByDisplayName(displayName, first = true) {
-    const modu = findAllModules((mod) => mod?.default?.displayName === displayName);
+    var _a;
+    const modu = findAllModules((mod) => {
+      var _a2;
+      return ((_a2 = mod == null ? void 0 : mod.default) == null ? void 0 : _a2.displayName) === displayName;
+    });
     if (first)
-      return modu?.[0] ?? void 0;
-    return modu ?? void 0;
+      return (_a = modu == null ? void 0 : modu[0]) != null ? _a : void 0;
+    return modu != null ? modu : void 0;
   }
   function findModuleByProps(...props) {
     let isFirst = true;
@@ -136,6 +140,7 @@
     return window.localStorage;
   }
   function getData(pluginName, key, defaultValue = void 0) {
+    var _a, _b, _c;
     if (!pluginName || !key)
       return error("getData", "You need atleast 2 args, 'pluginName', 'key'");
     const local = localStorage();
@@ -145,7 +150,7 @@
     if (typeof DrDiscordStorage["PluginData"][pluginName] == "undefined")
       DrDiscordStorage["PluginData"][pluginName] = {};
     local.setItem("DrDiscordStorage", JSON.stringify(DrDiscordStorage));
-    return DrDiscordStorage["PluginData"]?.[pluginName]?.[key] ?? defaultValue;
+    return (_c = (_b = (_a = DrDiscordStorage["PluginData"]) == null ? void 0 : _a[pluginName]) == null ? void 0 : _b[key]) != null ? _c : defaultValue;
   }
   function setData(pluginName, key, value) {
     if (!pluginName || !key || !value)
@@ -169,27 +174,20 @@
     static getPatchesByCaller(name) {
       if (!name)
         return [];
-      const patches2 = [];
+      const patches = [];
       for (const patch of this.patches) {
         for (const childPatch of patch.children) {
           if (childPatch.caller === name)
-            patches2.push(childPatch);
+            patches.push(childPatch);
         }
       }
-      return patches2;
+      return patches;
     }
-    static unpatchAll(patches2) {
-      if (typeof patches2 === "string")
-        patches2 = this.getPatchesByCaller(patches2);
-      for (const patch of patches2)
+    static unpatchAll(patches) {
+      if (typeof patches === "string")
+        patches = this.getPatchesByCaller(patches);
+      for (const patch of patches)
         patch.unpatch();
-    }
-    static resolveModule(module) {
-      if (!module || typeof module === "function" || typeof module === "object" && !Array.isArray(module))
-        return module;
-      if (Array.isArray(module))
-        return findModuleByProps(module);
-      return null;
     }
     static makeOverride(patch) {
       return function() {
@@ -259,7 +257,7 @@
         type = "after",
         forcePatch = true
       } = options;
-      const module = this.resolveModule(moduleToPatch);
+      const module = moduleToPatch;
       if (!module)
         return null;
       if (!module[functionName] && forcePatch)
@@ -304,9 +302,9 @@
       return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, { type: "instead" }));
     }
   };
+  var patcher_default = Patcher;
 
   // index.js
-  var { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches } = Patcher;
   window.DrApi = {
     modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules },
     logger: { log, warn, error },
@@ -318,7 +316,7 @@
     React,
     ReactDOM,
     storage: storage_default,
-    Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches }
+    Patcher: patcher_default
   };
   log(DrApi.info.name, "Everything fully loaded");
 })();
