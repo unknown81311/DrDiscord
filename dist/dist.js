@@ -102,30 +102,27 @@
     title = DrApi.info.shortName,
     input = void 0
   }) {
-    console[type](`%c[${title}]%c`, ["font-weight: bold", type === "log" && "color: red"].join(";"), "", typeof input === "object" ? [...input][0] : input);
+    console[type](`%c[${title}]%c`, ["font-weight: bold", type === "log" && "color: red"].join(";"), "", ...input);
   }
   function log(title, ...logs) {
     logging({
       type: "log",
       title,
-      input: logs,
-      color: "#001BEB"
+      input: logs
     });
   }
   function warn(title, ...warns) {
     logging({
       type: "warn",
       title,
-      input: warns,
-      color: "#E3C710"
+      input: warns
     });
   }
   function error(title, ...errors) {
     logging({
       type: "error",
       title,
-      input: errors,
-      color: "#DB1860"
+      input: errors
     });
   }
 

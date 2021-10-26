@@ -18,8 +18,7 @@ window.DrApi = {
     version: "1.0.0",
     shortName: "DrDiscord"
   },
-  React, ReactDOM, storage,
-  Patcher,
+  React, ReactDOM, storage, Patcher
 }
 
 log(DrApi.info.name, "Everything fully loaded")
