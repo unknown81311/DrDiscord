@@ -12,11 +12,9 @@ class Patcher {
   static getPatchesByCaller(name) {
     if (!name) return []
     const patches = []
-    for (const patch of this.patches) {
-      for (const childPatch of patch.children) {
+    for (const patch of this.patches)
+      for (const childPatch of patch.children)
         if (childPatch.caller === name) patches.push(childPatch)
-      }
-    }
     return patches
   }
   static unpatchAll(patches) {

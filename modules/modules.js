@@ -1,3 +1,8 @@
+/**
+ * @name getAllModules
+ * @description Automatically gets webpackExports from discords chunks
+ * @returns webpackExports
+ */
 function getAllModules() {
   const chunkers = ["webpackChunkdiscord_app"]
   for (let chunky of chunkers) {
@@ -60,7 +65,9 @@ function findModuleByDisplayName(displayName, first = true) {
  */
 function findModuleByProps(...props) { 
   let isFirst = true
+  let returnNumber = 0
   if (typeof props[props.length - 1] === "boolean") isFirst = props.pop()
+  if (typeof props[props.length - 1] === "number") returnNumber = props.pop()
   const nonDefault = findAllModules(mod => {
     const filter = (e) => e
     const component = filter(mod)
@@ -83,10 +90,11 @@ function findModuleByProps(...props) {
     return undefined
   })
   let modules = []
-  if (nonDefault.length !== 0) for (const ite of nonDefault) modules.push(ite)
-  if (isDefault.length !== 0) for (const ite of isDefault) modules.push(ite)
-  if (isFirst && modules.length !== 0) return modules[0]
-  if (modules.length !== 0) return modules
+  if (nonDefault.length) for (const ite of nonDefault) modules.push(ite)
+  if (isDefault.length) for (const ite of isDefault) modules.push(ite.default)
+  if (returnNumber) return modules[returnNumber]
+  if (isFirst) return modules[0]
+  if (modules.length) return modules
   return undefined
 }
 

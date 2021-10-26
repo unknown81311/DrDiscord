@@ -47,8 +47,11 @@
   }
   function findModuleByProps(...props) {
     let isFirst = true;
+    let returnNumber = 0;
     if (typeof props[props.length - 1] === "boolean")
       isFirst = props.pop();
+    if (typeof props[props.length - 1] === "number")
+      returnNumber = props.pop();
     const nonDefault = findAllModules((mod) => {
       const filter = (e) => e;
       const component = filter(mod);
@@ -76,15 +79,17 @@
       return void 0;
     });
     let modules = [];
-    if (nonDefault.length !== 0)
+    if (nonDefault.length)
       for (const ite of nonDefault)
         modules.push(ite);
-    if (isDefault.length !== 0)
+    if (isDefault.length)
       for (const ite of isDefault)
-        modules.push(ite);
-    if (isFirst && modules.length !== 0)
+        modules.push(ite.default);
+    if (returnNumber)
+      return modules[returnNumber];
+    if (isFirst)
       return modules[0];
-    if (modules.length !== 0)
+    if (modules.length)
       return modules;
     return void 0;
   }
@@ -175,12 +180,10 @@
       if (!name)
         return [];
       const patches = [];
-      for (const patch of this.patches) {
-        for (const childPatch of patch.children) {
+      for (const patch of this.patches)
+        for (const childPatch of patch.children)
           if (childPatch.caller === name)
             patches.push(childPatch);
-        }
-      }
       return patches;
     }
     static unpatchAll(patches) {
