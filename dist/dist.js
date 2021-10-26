@@ -1,17 +1,13 @@
 (() => {
   // modules/modules.js
   function getAllModules() {
-    const chunkers = ["webpackJsonp", "webpackChunkdiscord_app"];
+    const chunkers = ["webpackChunkdiscord_app"];
     for (let chunky of chunkers) {
       const chunk = window[chunky];
       if (!chunk)
         continue;
       let modules;
       if (chunky == chunkers[0])
-        modules = chunk.push([[], { "__extra_id__": (_module_, exports, req) => {
-          _module_.exports = req;
-        } }, [["__extra_id__"]]]);
-      if (chunky == chunkers[1])
         chunk.push([[Math.random().toString(36).substring(7)], {}, (e) => modules = e]);
       return modules;
     }
@@ -39,31 +35,31 @@
     }
     return void 0;
   }
-  function findModuleByDisplayName(displayName) {
-    const mod = findModule((module, filter = (e) => e) => {
-      const component = filter(module);
-      if (!component)
-        return void 0;
-      if (module?.default?.displayName === displayName)
-        return module;
-      return void 0;
-    });
-    if (!mod?.default)
-      return void 0;
-    return mod.default;
+  function findModuleByDisplayName(displayName, first = true) {
+    const modu = findAllModules((mod) => mod?.default?.displayName === displayName);
+    if (first)
+      return modu?.[0] ?? void 0;
+    return modu ?? void 0;
   }
   function findModuleByProps(...props) {
-    const nonDefualt = findModule((module, filter = (e) => e) => {
-      const component = filter(module);
+    let isFirst = true;
+    if (typeof props[props.length - 1] === "boolean")
+      isFirst = props.pop();
+    const nonDefault = findAllModules((mod) => {
+      const filter = (e) => e;
+      const component = filter(mod);
       if (!component)
         return void 0;
-      for (let p = 0; p < props.length; p++)
-        if (component[props[p]] !== void 0)
-          return module;
+      for (let p = 0; p < props.length; p++) {
+        if (!component[props[p]])
+          return void 0;
+        return mod;
+      }
       return void 0;
     });
-    const isDefualt = findModule((module, filter = (e) => e) => {
-      const component = filter(module);
+    const isDefault = findAllModules((mod) => {
+      const filter = (e) => e;
+      const component = filter(mod);
       if (!component)
         return void 0;
       if (!component.default)
@@ -71,13 +67,24 @@
       for (let p = 0; p < props.length; p++) {
         if (!component.default[props[p]])
           return void 0;
-        return module;
+        return mod;
       }
       return void 0;
     });
-    return nonDefualt !== void 0 ? nonDefualt : isDefualt?.default;
+    let modules = [];
+    if (nonDefault.length !== 0)
+      for (const ite of nonDefault)
+        modules.push(ite);
+    if (isDefault.length !== 0)
+      for (const ite of isDefault)
+        modules.push(ite);
+    if (isFirst && modules.length !== 0)
+      return modules[0];
+    if (modules.length !== 0)
+      return modules;
+    return void 0;
   }
-  var React = findModuleByProps("createElement");
+  var React = findModuleByProps("createElement", "Fragment");
   var ReactDOM = findModuleByProps("render", "findDOMNode");
 
   // common/logger.js
@@ -130,9 +137,7 @@
   }
   function getData(pluginName, key, defaultValue = void 0) {
     if (!pluginName || !key)
-      return error("getData", "You need 2 args, 'pluginName', 'key'");
-    if (!defaultValue)
-      warn("getData", "You should store a default value");
+      return error("getData", "You need atleast 2 args, 'pluginName', 'key'");
     const local = localStorage();
     let DrDiscordStorage = JSON.parse(local.getItem("DrDiscordStorage"));
     if (typeof DrDiscordStorage["PluginData"] == "undefined")
@@ -300,32 +305,25 @@
     }
   };
 
-  // ui/modals.js
-  async function showConfirmationModal(title, content, options = {}) {
-    const Markdown = findModule((m) => m.displayName === "Markdown" && m.rules);
-    const ConfirmModal = findModuleByDisplayName("ConfirmModal");
-    const ModalActions = findModuleByProps("openModalLazy");
-    const Buttons = findModuleByProps("ButtonColors");
-    const { Messages } = findModuleByProps("Messages");
-    const emptyFunction = () => {
-    };
-    const { onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = "Messages.OKAY", cancelText = "Messages.CANCEL", danger = false, key = void 0 } = options;
-    if (!Array.isArray(content))
-      content = [content];
-    content = content.map((c) => typeof c === "string" ? React.createElement(Markdown, null, c) : c);
-    return ModalActions.openModal((props) => {
-      return React.createElement(ConfirmModal, Object.assign({
-        header: title,
-        confirmButtonColor: danger ? Buttons.ButtonColors.RED : Buttons.ButtonColors.BRAND,
-        confirmText,
-        cancelText,
-        onConfirm,
-        onCancel
-      }, props), "content");
-    }, { modalKey: key });
-  }
-  async function alert(title, children) {
-    return showConfirmationModal(title, children, { cancelText: null });
+  // pluginapi.js
+  function push(plugin, pluginInfo) {
+    if (!plugin)
+      return error("PluginApi", "Plugin is required");
+    if (!pluginInfo)
+      return error("PluginApi", "Plugin info is required");
+    if (typeof pluginInfo !== "object" || !pluginInfo.name || !pluginInfo.description || !pluginInfo.version || !pluginInfo.author) {
+      error("PluginApi", "Plugin info is has to be a object/complete, demo below");
+      log("demo", {
+        name: "Plugin Name",
+        description: "Plugin Description",
+        version: "Plugin Version",
+        author: "Plugin Author"
+      });
+      return;
+    }
+    DrApi.plugins[pluginInfo.name] = [plugin, pluginInfo];
+    plugin?.onLoad?.();
+    plugin?.prototype?.onLoad?.();
   }
 
   // index.js
@@ -342,7 +340,9 @@
     ReactDOM,
     storage: storage_default,
     Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
-    modals: { showConfirmationModal, alert }
+    plugins: {
+      push
+    }
   };
   log(DrApi.info.name, "Everything fully loaded");
 })();

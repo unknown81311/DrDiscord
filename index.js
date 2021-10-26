@@ -9,8 +9,11 @@ import {
 import { log, warn, error } from "./common/logger"
 import storage from "./modules/storage"
 import Patcher from "./modules/patcher"
-import { showConfirmationModal, alert } from "./ui/modals"
+import { push as pluginApiPush } from "./pluginapi"
 
+// const { localStorage } = storage
+// if (!localStorage.getItem("DrApi-Plugins")) localStorage.setItem("DrApi-Plugins", JSON.stringify([]))
+// localStorage.getItem("DrApi-Plugins")?.forEach(e => DrApi.plugins[e[0].name] = e)
 const { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches } = Patcher
 
 window.DrApi = {
@@ -23,7 +26,9 @@ window.DrApi = {
   },
   React, ReactDOM, storage,
   Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
-  modals: { showConfirmationModal, alert }
+  plugins: {
+    push: pluginApiPush
+  },
 }
 
 log(DrApi.info.name, "Everything fully loaded")
