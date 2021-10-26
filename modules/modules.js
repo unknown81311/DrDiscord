@@ -9,6 +9,8 @@ function getAllModules() {
     return modules
   }
 }
+const webpackExports = getAllModules()
+
 /**
  * @name findAllModules
  * @param {function} filter 
@@ -16,7 +18,6 @@ function getAllModules() {
  */
 function findAllModules(filter = (m => m)) {
   let modules = []
-  const webpackExports = getAllModules()
   for(let ite in webpackExports.c) {
     if(Object.hasOwnProperty.call(webpackExports.c, ite)) {
       let ele = webpackExports.c[ite].exports

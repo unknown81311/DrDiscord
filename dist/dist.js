@@ -12,9 +12,9 @@
       return modules;
     }
   }
+  var webpackExports = getAllModules();
   function findAllModules(filter = (m) => m) {
     let modules = [];
-    const webpackExports = getAllModules();
     for (let ite in webpackExports.c) {
       if (Object.hasOwnProperty.call(webpackExports.c, ite)) {
         let ele = webpackExports.c[ite].exports;
@@ -305,27 +305,6 @@
     }
   };
 
-  // pluginapi.js
-  function push(plugin, pluginInfo) {
-    if (!plugin)
-      return error("PluginApi", "Plugin is required");
-    if (!pluginInfo)
-      return error("PluginApi", "Plugin info is required");
-    if (typeof pluginInfo !== "object" || !pluginInfo.name || !pluginInfo.description || !pluginInfo.version || !pluginInfo.author) {
-      error("PluginApi", "Plugin info is has to be a object/complete, demo below");
-      log("demo", {
-        name: "Plugin Name",
-        description: "Plugin Description",
-        version: "Plugin Version",
-        author: "Plugin Author"
-      });
-      return;
-    }
-    DrApi.plugins[pluginInfo.name] = [plugin, pluginInfo];
-    plugin?.onLoad?.();
-    plugin?.prototype?.onLoad?.();
-  }
-
   // index.js
   var { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches } = Patcher;
   window.DrApi = {
@@ -339,10 +318,7 @@
     React,
     ReactDOM,
     storage: storage_default,
-    Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches },
-    plugins: {
-      push
-    }
+    Patcher: { after, before, getPatchesByCaller, instead, pushChildPatch, unpatchAll, patches }
   };
   log(DrApi.info.name, "Everything fully loaded");
 })();
