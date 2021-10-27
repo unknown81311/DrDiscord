@@ -6,9 +6,11 @@
       const chunk = window[chunky];
       if (!chunk)
         continue;
+      let randomNum = Math.random().toString(36).substring(7);
       let modules;
-      if (chunky == chunkers[0])
-        chunk.push([[Math.random().toString(36).substring(7)], {}, (e) => modules = e]);
+      if (chunky == chunkers[0]) {
+        chunk.push([[randomNum], {}, (e) => modules = e]);
+      }
       return modules;
     }
   }
@@ -42,8 +44,8 @@
       return ((_a2 = mod == null ? void 0 : mod.default) == null ? void 0 : _a2.displayName) === displayName;
     });
     if (first)
-      return (_a = modu == null ? void 0 : modu[0]) != null ? _a : void 0;
-    return modu != null ? modu : void 0;
+      return (_a = modu == null ? void 0 : modu[0]) == null ? void 0 : _a.default;
+    return modu;
   }
   function findModuleByProps(...props) {
     let isFirst = true;
@@ -308,11 +310,7 @@
   window.DrApi = {
     modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules },
     logger: { log, warn, error },
-    info: {
-      name: "Discord Re-envisioned",
-      version: "1.0.0",
-      shortName: "DrDiscord"
-    },
+    info: { name: "Discord Re-envisioned", version: "1.0.0", shortName: "DrDiscord" },
     React,
     ReactDOM,
     storage: storage_default,

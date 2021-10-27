@@ -8,9 +8,11 @@ function getAllModules() {
   for (let chunky of chunkers) {
     const chunk = window[chunky]
     if (!chunk) continue
+    let randomNum = Math.random().toString(36).substring(7)
     let modules
-    if(chunky == chunkers[0])
-      chunk.push([[Math.random().toString(36).substring(7)],{},(e) => modules = e]) 
+    if(chunky == chunkers[0]) {
+      chunk.push([[randomNum],{},(e) => modules = e]) 
+    }
     return modules
   }
 }
@@ -54,8 +56,8 @@ function findModule(filter = (m => m)) {
  */
 function findModuleByDisplayName(displayName, first = true) {
   const modu = findAllModules(mod => mod?.default?.displayName === displayName)
-  if(first) return modu?.[0] ?? undefined
-  return modu ?? undefined
+  if(first) return modu?.[0]?.default
+  return modu
 }
 
 /**

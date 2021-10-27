@@ -13,12 +13,9 @@ import Patcher from "./modules/patcher"
 window.DrApi = {
   modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules },
   logger: { log, warn, error },
-  info: {
-    name: "Discord Re-envisioned",
-    version: "1.0.0",
-    shortName: "DrDiscord"
-  },
-  React, ReactDOM, storage, Patcher
+  info: { name: "Discord Re-envisioned", version: "1.0.0", shortName: "DrDiscord" },
+  React, ReactDOM, storage, 
+  Patcher
 }
 
 log(DrApi.info.name, "Everything fully loaded")
