@@ -43,11 +43,13 @@
   }
 }
 //
-.content-1LAB8Z[datapage="3"] {
-  padding: 0 !important;
-  overflow: hidden !important;
-  border-radius: 0;
-  height: 500px;
+.content-1LAB8Z {
+  height: 400px;
+  &[datapage="3"] {
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 0;
+  }
   #custom-css {
     height: 100%;
     border-radius: 8px;

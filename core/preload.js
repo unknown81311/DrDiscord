@@ -65,7 +65,7 @@ else { console.error("No preload path found!") }
     }))
     let waited
     waited = setInterval(() => {
-      if(!Boolean(topWindow.require)) return
+      if(!Boolean(topWindow.requirejs)) return
       clearInterval(waited)
       //
       topWindow.requirejs.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs'}});
@@ -82,8 +82,6 @@ else { console.error("No preload path found!") }
       topWindow.requirejs(["vs/editor/editor.main"], function () {})
     }, 100)
     //
-    global.require = require
-    //
     const sassStylingFile = _path.join(__dirname, "styles.scss")
     stylingApi.inject("DrDiscordStyles", stylingApi.sass({ file: sassStylingFile }))
     _fs.watchFile(sassStylingFile, {persistent: true, interval: 1000}, () => {
@@ -94,6 +92,9 @@ else { console.error("No preload path found!") }
     //
     interval = setInterval(() => {
       if (!find(["createElement", "Component"])) return
+      //
+      toWindow(require)
+      //
       clearInterval(interval)
       DiscordNative.window.setDevtoolsCallbacks(null, null)
       //
@@ -132,7 +133,6 @@ else { console.error("No preload path found!") }
           }
         } = DrApi
         const SettingsModal = require("./ui/SettingsModal")
-        const Menu = find("Menu")
         
         patch(ele.__proto__, "render", (_, res) => {
           res.props.children[res.props.children.length - 1].props.children.unshift(
