@@ -1,9 +1,11 @@
+const { info } = require("../package.json")
+
 function logging({
-  type = "log", 
-  title = DrApi.info.shortName, 
+  type = "info", 
+  title = info.name, 
   input = undefined
 }) {
-  console[type](`%c[${title}]%c`, ["font-weight: bold", type === "log" && "color: red"].join(";"), "", ...input)
+  console[type](`%c[${title}]%c`, ["font-weight: bold", type === "info" && "color: red"].join(";"), "", ...input)
 }
 /**
  * @name log
@@ -12,7 +14,7 @@ function logging({
  */
 function log(title, ...logs) {
   logging({
-    type: "log", 
+    type: "info", 
     title: title, 
     input: logs
   })
@@ -22,11 +24,11 @@ function log(title, ...logs) {
  * @param {string} title 
  * @param  {...any} warns 
  */
-function warn(title, ...warns) {
+function warn(title, ...warnings) {
   logging({
     type: "warn", 
     title: title, 
-    input: warns
+    input: warnings
   })
 }
 /**
@@ -41,5 +43,4 @@ function error(title, ...errors) {
     input: errors
   })
 }
-
-export { log, warn, error }
+module.exports = { log, warn, error, logging }

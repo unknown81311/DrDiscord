@@ -1,21 +1,70 @@
-import { 
-  findModule, 
-  findModuleByProps, 
-  findModuleByDisplayName, 
-  findAllModules, 
-  React, 
-  ReactDOM 
-} from "./modules/modules"
-import { log, warn, error } from "./common/logger"
-import storage from "./modules/storage"
-import Patcher from "./modules/patcher"
+const { join } = require("path")
+const electron = { ipcMain } = require("electron")
+const { default: installExtension, REACT_DEVELOPER_TOOLS } = require("electron-devtools-installer");
+const Module = require("module")
+const _sass = require("sass")
+const DataStore = require("./core/datastore")
 
-window.DrApi = {
-  modules: { findModule, findModuleByProps, findModuleByDisplayName, findAllModules },
-  logger: { log, warn, error },
-  info: { name: "Discord Re-envisioned", version: "1.0.0", shortName: "DrDiscord" },
-  React, ReactDOM, storage, 
-  Patcher
+const Settings = DataStore("DR_DISCORD_SETTINGS")
+
+electron.app.commandLine.appendSwitch("no-force-async-hooks-checks")
+
+process.env.DRDISCORD_DIR = __dirname
+
+class BrowserWindow extends electron.BrowserWindow {
+  constructor(opt) {
+    if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title) return super(opt)
+    const originalPreload = opt.webPreferences.preload
+    process.env.DISCORD_PRELOAD = originalPreload
+    
+    opt = Object.assign(opt, {
+      webPreferences: {
+        contextIsolation: false,
+        enableRemoteModule: true,
+        nodeIntegration: true,
+        preload: join(__dirname, "core", "preload.js")
+      }
+    })
+    if (Settings.transparency) {
+      opt = Object.assign(opt, {
+        transparent: true,
+        backgroundColor: "#00000000",
+      })
+    }
+    super(opt)
+  }
 }
 
-log(DrApi.info.name, "Everything fully loaded")
+ipcMain.handle("COMPILE_SASS", (_, sass) => {
+  try { return _sass.renderSync({ data: sass }).css.toString() } 
+  catch (e) { return e.message }
+})
+ipcMain.handle("RESTART_DISCORD", () => {
+  electron.app.relaunch()
+  process.platform === "darwin" ? electron.app.quit() : electron.app.exit()
+})
+
+
+electron.app.once("ready", () => {
+  electron.session.defaultSession.webRequest.onHeadersReceived(function({ responseHeaders }, callback) {
+    delete responseHeaders["content-security-policy-report-only"]
+    delete responseHeaders["content-security-policy"]
+    callback({ 
+      cancel: false, 
+      responseHeaders
+    })
+  })
+  installExtension(REACT_DEVELOPER_TOOLS)
+})
+
+const Electron = new Proxy(electron, { get: (target, prop) => prop === "BrowserWindow" ? BrowserWindow : target[prop] })
+
+const electronPath = require.resolve("electron")
+delete require.cache[electronPath].exports
+require.cache[electronPath].exports = Electron
+
+const basePath = join(process.resourcesPath, "app.asar")
+const pkg = require(join(basePath, "package.json"))
+electron.app.setAppPath(basePath)
+electron.app.name = pkg.name
+Module._load(join(basePath, pkg.main), null, true)
