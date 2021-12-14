@@ -43,7 +43,7 @@ function find(filter) {
  */
 
 function byProps(...props) {
-  return byPropsDefault(props) || getModule(m => props.every((prop) => typeof m[prop] !== "undefined"))
+  return getModule(m => props.every((prop) => typeof m[prop] !== "undefined")) || byPropsDefault(props)
 }
 function byPropsDefault([...props]) {
   return getModule(m => props.every((prop) => typeof m.default?.[prop] !== "undefined"))?.default

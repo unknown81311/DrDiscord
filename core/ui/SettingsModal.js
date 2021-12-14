@@ -14,9 +14,30 @@ const TabBar = DrApi.find("TabBar").default
 const Gear = DrApi.find("Gear").default
 const { SingleSelect } = DrApi.find(["SingleSelect"])
 const { FormItem, FormText } = DrApi.find(["FormItem", "FormText"])
+const Button = DrApi.find(["ButtonColors"])
+
 const CustomCSS = require("./CustomCSS")
 
 const settings = DataStore("DR_DISCORD_SETTINGS")
+
+const Updater = React.memo(() => {
+  const [updating, setUpdating] = React.useState(0)
+  return React.createElement("div", {
+    children: [
+      React.createElement(Text, {}, "Updating will RESTART the Discord client. "),
+      React.createElement(Button.default, {
+        children: updating === 0 ? "Update" : updating === 1 ? "Updating..." : updating === 2 ? "Updated" : "Up to date",
+        onClick: () => {
+          setUpdating(1)
+          require("child_process").exec(`cd ${process.env.DRDISCORD_DIR} && git pull`, function(err, res) {
+            if (err) return console.error(err)
+            ipcRenderer.invoke("RESTART_DISCORD")
+          })
+        },
+      })
+    ]
+  })
+})
 
 const Form = React.memo(({ title, note, children }) => {
   return React.createElement(FormItem, {
@@ -81,26 +102,6 @@ const DrSettings = React.memo(({
 
   return React.createElement(React.Fragment, {
     children: [
-      React.createElement(SwitchItem, {
-        title: "Load Cumcord",
-        note: "Load's Cumcord with DrDiscord, doesn't download anything",
-        value: cc,
-        reload: true,
-        onChange: (val) => {
-          settings.cc = val
-          setCC(val)
-        }
-      }),
-      React.createElement(SwitchItem, {
-        title: "Transparency",
-        note: "Makes the window transparent, REMOVES WINDOW SNAPPING!",
-        value: transparency,
-        full_reload: true,
-        onChange: (val) => {
-          settings.transparency = val
-          setTransparency(val)
-        }
-      }),
       React.createElement(Form, {
         title: "Page Item's Location",
         note: "Where to show the page items",
@@ -133,12 +134,10 @@ const DrSettings = React.memo(({
               {
                 label: "Both",
                 value: 0
-              }, 
-              {
+              }, {
                 label: "Icons",
                 value: 1
-              }, 
-              {
+              }, {
                 label: "Text",
                 value: 2
               }
@@ -150,6 +149,26 @@ const DrSettings = React.memo(({
             }
           })
         ]
+      }),
+      React.createElement(SwitchItem, {
+        title: "Load Cumcord",
+        note: "Load's Cumcord with DrDiscord, doesn't download anything",
+        value: cc,
+        reload: true,
+        onChange: (val) => {
+          settings.cc = val
+          setCC(val)
+        }
+      }),
+      React.createElement(SwitchItem, {
+        title: "Transparency",
+        note: "Makes the window transparent, REMOVES WINDOW SNAPPING!",
+        value: transparency,
+        full_reload: true,
+        onChange: (val) => {
+          settings.transparency = val
+          setTransparency(val)
+        }
       }),
     ]
   })
@@ -208,6 +227,19 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
           (tbc === 0 || tbc === 2) ? "Custom CSS" : null
         ],
         id: 3,
+      }),
+      React.createElement(TabBar.Item, {
+        children: [
+          (tbc <= 1) ? React.createElement("svg", {
+            fill: "currentcolor",
+            viewBox: "0 0 50 50",
+            children: React.createElement("path", {
+              d: "M 24.78125 2.9375 C 23.75 3.050781 22.976563 3.933594 23 4.96875 L 23 28.6875 L 19.40625 25.09375 C 18.984375 24.660156 18.386719 24.441406 17.78125 24.5 C 17.003906 24.574219 16.339844 25.097656 16.085938 25.835938 C 15.828125 26.578125 16.027344 27.398438 16.59375 27.9375 L 25 36.34375 L 33.40625 27.9375 C 33.929688 27.4375 34.144531 26.695313 33.964844 25.992188 C 33.785156 25.292969 33.242188 24.742188 32.542969 24.554688 C 31.84375 24.367188 31.097656 24.574219 30.59375 25.09375 L 27 28.6875 L 27 4.96875 C 27.007813 4.425781 26.796875 3.90625 26.414063 3.523438 C 26.03125 3.140625 25.511719 2.929688 24.96875 2.9375 C 24.90625 2.933594 24.84375 2.933594 24.78125 2.9375 Z M 2 36 L 2 41.6875 C 2 43.164063 2.449219 44.59375 3.5 45.59375 C 4.550781 46.59375 5.996094 47 7.4375 47 L 42.59375 47 C 44.054688 47 45.5 46.585938 46.53125 45.5625 C 47.5625 44.539063 48 43.058594 48 41.59375 L 48 36 L 44 36 L 44 41.59375 C 44 42.328125 43.84375 42.597656 43.71875 42.71875 C 43.59375 42.839844 43.332031 43 42.59375 43 L 7.4375 43 C 6.679688 43 6.402344 42.832031 6.28125 42.71875 C 6.160156 42.605469 6 42.414063 6 41.6875 L 6 36 Z"
+            })
+          }) : null,
+          (tbc === 0 || tbc === 2) ? "Updater" : null
+        ],
+        id: 4,
       })
     ]
   })
@@ -216,13 +248,13 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
 module.exports = React.memo(({mProps, PAGE}) => {
   const [pi, setPI] = React.useState(settings.PageItem)
   const [page, setPage] = React.useState(PAGE || 0)
-  const [tbc, setTBC] = React.useState(settings.TabBarContent)
+  const [tbc, setTBC] = React.useState(settings.TabBarContent || 1)
   
   return React.createElement(ModalElements.ModalRoot, {
     ...mProps,
     size: ModalElements.ModalSize.LARGE,
     children: [
-      ((pi || 0) === 0) ? React.createElement("div", {
+      (pi === 0) ? React.createElement("div", {
         className: "DrDiscordSettingsTabBarWrapper",
         children: React.createElement(Tabs, { page, setPage, TabBarContent: { tbc } })
       }) : null,
@@ -262,7 +294,7 @@ module.exports = React.memo(({mProps, PAGE}) => {
           page === 0 ? React.createElement(DrSettings, {
             PageItem: { pi, setPI },
             TabBarContent: { tbc, setTBC }
-          }) : page === 1 ? React.createElement(Text, null, "PLUGIN PAGE") : page === 2 ? React.createElement(Text, null, "THEME PAGE") : page === 3 ? React.createElement(CustomCSS) : null,
+          }) : page === 1 ? React.createElement(Text, null, "PLUGIN PAGE") : page === 2 ? React.createElement(Text, null, "THEME PAGE") : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : null,
         ]
       })
     ]

@@ -12,8 +12,12 @@ const settings = DataStore("DR_DISCORD_SETTINGS")
 module.exports = class CustomCSS extends React.Component {
   constructor() {
     super()
+    this.state = {
+      error: false
+    }
   }
   componentDidMount() {
+    if (!window?.monaco?.editor?.create) return this.setState({ error: true })
     this.editor = window.monaco.editor.create(window.document.getElementById("custom-css"), {
       language: "scss",
       theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
@@ -21,13 +25,13 @@ module.exports = class CustomCSS extends React.Component {
     })
     this.editor.onDidChangeModelContent(() => {
       const value = this.editor.getValue()
-      settings.CSS = value
+      DataStore.setData("DR_DISCORD_SETTINGS", "CSS", value)
       window.document.getElementById("CUSTOMCSS").textContent = styling.compileSass(value)
     })
   }
   render() {
-    return React.createElement("div", {
-      id: "custom-css",
+    return this.state.error ? React.createElement("div", null, "An error accord with the monaco editor"): React.createElement("div", {
+      id: "custom-css"
     })
   }
 }

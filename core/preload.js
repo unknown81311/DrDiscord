@@ -1,5 +1,5 @@
 const { webFrame } = require("electron")
-const { Module } = require("module")
+const { Module } = _module = require("module")
 const _path = require("path")
 const _fs = require("fs")
 const logger = require("./logger")
@@ -125,6 +125,12 @@ else { console.error("No preload path found!") }
       for (const key of Object.keys(DrApi)) Object.freeze(DrApi[key])
       logger.log("DrDiscord", "Loaded!")
       async function start() {
+        const oldLoad = _module._load
+        _module._load = function (request) {
+          if (request === "React") return DrApi.React
+          if (request === "ReactDOM") return DrApi.ReactDOM
+          return oldLoad.apply(this, arguments)
+        }
         const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
         const PanelButton = find("PanelButton")
         const {
@@ -133,7 +139,7 @@ else { console.error("No preload path found!") }
           }
         } = DrApi
         const SettingsModal = require("./ui/SettingsModal")
-        
+        const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
         patch(ele.__proto__, "render", (_, res) => {
           res.props.children[res.props.children.length - 1].props.children.unshift(
             DrApi.React.createElement(PanelButton.default, {
@@ -156,7 +162,7 @@ else { console.error("No preload path found!") }
         })
         ele.handleMouseEnter()
         // Patch MessageActions
-        patch(find(["parse", "parseTopic"]).defaultRules.codeBlock, "react", ([props], origRes) => {
+        patch(codeBlock, "react", ([props], origRes) => {
           if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
           patch(origRes.props, "render", (_, res) => {
             if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]

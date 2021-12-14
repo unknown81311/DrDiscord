@@ -59,3 +59,29 @@
   }
 }
 //
+.markup-2BOw-j pre {
+  position: relative;
+  .dr-discord-codeblock-copy-button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border-radius: 4px 0;
+    color: var(--header-secondary);
+    background: var(--background-secondary);
+    border: 1px solid var(--background-tertiary);
+    transition: all .2s ease-in-out;
+    &:hover {
+      background: var(--background-tertiary);
+      color: var(--header-primary);
+    }
+  }
+}
+//
+.DR-collapsable-section {
+  margin-bottom: 16px;
+  .DR-collapsable-section-content{
+    &:not(.DR-collapsable-section-content-open) {
+      display: none;
+    }
+  }
+}
