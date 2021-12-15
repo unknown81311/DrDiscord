@@ -246,7 +246,7 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
 })
 
 module.exports = React.memo(({mProps, PAGE}) => {
-  const [pi, setPI] = React.useState(settings.PageItem)
+  const [pi, setPI] = React.useState(settings.PageItem || 0)
   const [page, setPage] = React.useState(PAGE || 0)
   const [tbc, setTBC] = React.useState(settings.TabBarContent || 1)
   
