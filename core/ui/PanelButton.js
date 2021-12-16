@@ -11,8 +11,6 @@ const { getGuilds } = DrApi.find(["getGuilds"])
 const Discord = DrApi.find("Discord").default
 
 const Icons = require("./Icons")
-const { ipcRenderer } = require("electron")
-const { exec } = require("child_process")
 const { info } = require("../../package.json")
 
 function openSettings(PAGE) {
@@ -80,12 +78,7 @@ const Button = React.memo(() => {
               id: "update",
               label: "Update",
               icon: () => React.createElement(Icons.Updater),
-              action: () => {
-                exec(`cd ${process.env.DRDISCORD_DIR} && git pull`, function(err, res) {
-                  if (err) return console.error(err)
-                  else ipcRenderer.invoke("RESTART_DISCORD")
-                })
-              }
+              action: DrApi.updateDrDiscord
             }),
             React.createElement(Menu.MenuSeparator),
             React.createElement(Menu.MenuItem, {

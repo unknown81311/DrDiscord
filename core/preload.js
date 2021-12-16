@@ -3,8 +3,7 @@ const { Module } = _module = require("module")
 const _path = require("path")
 const _fs = require("fs")
 const logger = require("./logger")
-
-const { info } = require("../package.json")
+const { exec } = require("child_process")
 
 const DataStore = require("./datastore")
 
@@ -195,6 +194,12 @@ else { console.error("No preload path found!") }
               joinServer: () => {
                 if (Boolean(getGuilds()["864267123694370836"])) transitionToGuild("864267123694370836", "864659344523001856")
                 else acceptInvite("XkQMaw34").then(({guild, channel}) => transitionToGuild(guild.id, channel.id))
+              },
+              updateDrDiscord: () => {
+                exec(`cd ${process.env.DRDISCORD_DIR} && git stache && git pull`, function(err, res) {
+                  if (err) return console.error(err)
+                  else ipcRenderer.invoke("RESTART_DISCORD")
+                })
               }
             }))
             if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()

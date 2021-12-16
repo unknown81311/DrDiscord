@@ -31,10 +31,7 @@ const Updater = React.memo(() => {
         children: updating === 0 ? "Update" : updating === 1 ? "Updating..." : updating === 2 ? "Updated" : "Up to date",
         onClick: () => {
           setUpdating(1)
-          require("child_process").exec(`cd ${process.env.DRDISCORD_DIR} && git pull`, function(err, res) {
-            if (err) return console.error(err)
-            ipcRenderer.invoke("RESTART_DISCORD")
-          })
+          DrApi.updateDrDiscord()
         },
       })
     ]
