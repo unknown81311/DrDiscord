@@ -16,6 +16,9 @@ module.exports = class CustomCSS extends React.Component {
       error: false
     }
   }
+  componentDidError() {
+    this.setState({ error: true })
+  }
   componentDidMount() {
     if (!window?.monaco?.editor?.create) return this.setState({ error: true })
     this.editor = window.monaco.editor.create(window.document.getElementById("custom-css"), {

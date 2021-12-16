@@ -63,6 +63,8 @@ else { console.error("No preload path found!") }
     //
     toWindow(require)
     //
+    DiscordNative.window.setDevtoolsCallbacks(null, null)
+    //
     const patch = require("./patch")
     const find = require("./webpack")
     const stylingApi = require("./stylings")
@@ -85,7 +87,6 @@ else { console.error("No preload path found!") }
       if (!find(["createElement", "Component"])) return
       //
       clearInterval(interval)
-      DiscordNative.window.setDevtoolsCallbacks(null, null)
       //
       const DrApi = {
         patch, find, DataStore,
