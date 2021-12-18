@@ -51,7 +51,6 @@
     border-radius: 0;
   }
   #custom-css {
-    height: 100%;
     border-radius: 8px;
   }
   .monaco-editor, .overflow-guard {
@@ -88,4 +87,45 @@
 //
 .DrDiscordDiscordLogo {
   width: 100%;
+}
+//
+#custom-css {
+  height: 100%;
+  width: 100%;
+}
+//
+#custom-css-popout {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 999999;
+  border: 1px solid var(--background-secondary-alt);
+  background-color: var(--background-tertiary);
+  border-radius: 8px 8px 0 8px;
+  &-content {
+    &-wrapper {
+      height: calc(100% - var(--header) - 10px);
+      margin-bottom: 10px;
+    }
+    min-width: 400px;
+    min-height: 400px;
+    height: 100%;
+    margin-bottom: 10px;
+    .monaco-editor, .overflow-guard {
+      border-radius: 0 0 0 5px;
+    }
+  }
+  &-header {
+    padding: 5px;
+    border-radius: 5px 5px 0 0;
+  }
+  &-resizer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px 0 0 5px;
+    cursor: nwse-resize;
+  }
 }

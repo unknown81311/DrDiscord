@@ -92,6 +92,7 @@ else { console.error("No preload path found!") }
         patch, find, DataStore,
         React: {...find(["createElement", "Component"])},
         ReactDOM: {...find(["render", "hydrate"])},
+        ReactSpring: {...find(["useSpring", "useTransition"])},
         request: require("request"),
         styling: {
           insert: (name, css, sass = false) => stylingApi.inject(name, css, sass),
@@ -102,12 +103,43 @@ else { console.error("No preload path found!") }
           functions: find(["openModal", "openModalLazy"]),
           elements: find(["ModalRoot", "ModalListContent"])
         },
+        joinServer: async (code, goTo = true) => {
+          const { transitionToGuild } = find(["transitionToGuild"])
+          const { acceptInvite } = find(["acceptInvite"])
+
+          const res = await acceptInvite(code)
+          if (goTo) transitionToGuild(res.guild.id, res.channel.id)
+        },
+        joinOfficialServer: () => {
+          const { transitionToGuild } = find(["transitionToGuild"])
+          const { acceptInvite } = find(["acceptInvite"])
+          const { getGuilds } = find(["getGuilds"])
+          
+          if (Boolean(getGuilds()["864267123694370836"])) transitionToGuild("864267123694370836", "864659344523001856")
+          else acceptInvite("XkQMaw34").then(({guild, channel}) => transitionToGuild(guild.id, channel.id))
+        },
+        updateDrDiscord: () => {
+          exec(`cd ${process.env.DRDISCORD_DIR} && git stache && git pull`, function(err, res) {
+            if (err) return console.error(err)
+            else ipcRenderer.invoke("RESTART_DISCORD")
+          })
+        },
+        customCSS: {
+          update: (scss) => {
+            DataStore.setData("DR_DISCORD_SETTINGS", "CSS", scss)
+            document.getElementById("CUSTOMCSS").innerText = stylingApi.sass(scss || "")
+          },
+          get: () => {
+            let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
+            return { css: stylingApi.sass(customCSS || ""), scss: customCSS || "" }
+          }
+        },
         util: {
           logger,
           waitFor,
           sleep,
           getOwnerInstance,
-          getReactInstance,
+          getReactInstance
         },
       }
       toWindow("DrApi", DrApi)
@@ -170,10 +202,6 @@ else { console.error("No preload path found!") }
             action: () => {openSettings(0)}
           }))
         })
-        //
-        const { transitionToGuild } = find(["transitionToGuild"])
-        const { acceptInvite } = find(["acceptInvite"])
-        const { getGuilds } = find(["getGuilds"])
         // Load CC
         DrApi.request("https://raw.githubusercontent.com/Cumcord/Cumcord/stable/dist/build.js", (err, _, body) => {
           if (err) logger.error(err)
@@ -191,17 +219,7 @@ else { console.error("No preload path found!") }
             }
             toWindow("DrApi", Object.assign({}, DrApi, {
               toggleCC,
-              openSettings,
-              joinServer: () => {
-                if (Boolean(getGuilds()["864267123694370836"])) transitionToGuild("864267123694370836", "864659344523001856")
-                else acceptInvite("XkQMaw34").then(({guild, channel}) => transitionToGuild(guild.id, channel.id))
-              },
-              updateDrDiscord: () => {
-                exec(`cd ${process.env.DRDISCORD_DIR} && git stache && git pull`, function(err, res) {
-                  if (err) return console.error(err)
-                  else ipcRenderer.invoke("RESTART_DISCORD")
-                })
-              }
+              openSettings
             }))
             if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
             num++

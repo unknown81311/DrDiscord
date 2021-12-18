@@ -10,12 +10,174 @@ const PanelButton = DrApi.find("PanelButton")
 const { getGuilds } = DrApi.find(["getGuilds"])
 const Discord = DrApi.find("Discord").default
 
+const CustomCSS = require("./CustomCSS")
 const Icons = require("./Icons")
 const { info } = require("../../package.json")
+const {
+  webFrame: {
+    top: { context:window }
+  }
+} = require("electron")
 
 function openSettings(PAGE) {
   openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE }))
 }
+
+const Context = React.memo(({ joined }) => {
+  return React.createElement(Menu.default, {
+    onClose: closeContextMenu,
+    navId: "DrApi-context-menu",
+    children: [
+      React.createElement(Menu.MenuItem, {
+        id: "settings",
+        label: "Settings",
+        action: () => openSettings(0),
+        children: [
+          React.createElement(Menu.MenuItem, {
+            id: "settings-plugins",
+            label: "Plugins",
+            icon: () => React.createElement(Icons.Plugins),
+            action: () => openSettings(1)
+          }),
+          React.createElement(Menu.MenuItem, {
+            id: "settings-themes",
+            label: "Themes",
+            icon: () => React.createElement(Icons.Themes),
+            action: () => openSettings(2)
+          }),
+          React.createElement(Menu.MenuItem, {
+            id: "settings-custom-css",
+            label: "Custom CSS",
+            icon: () => React.createElement(Icons.CustomCSS),
+            action: () => openSettings(3)
+          }),
+          React.createElement(Menu.MenuItem, {
+            id: "settings-updater",
+            label: "Updater",
+            icon: () => React.createElement(Icons.Updater),
+            action: () => openSettings(4)
+          }),
+        ]
+      }),
+      React.createElement(Menu.MenuSeparator),
+      React.createElement(Menu.MenuItem, {
+        id: "Misc",
+        label: "Misc",
+        children: [
+          React.createElement(Menu.MenuItem, {
+            id: "update",
+            label: "Update",
+            icon: () => React.createElement(Icons.Updater),
+            action: DrApi.updateDrDiscord
+          }),
+          React.createElement(Menu.MenuSeparator),
+          React.createElement(Menu.MenuItem, {
+            id: "discord-server",
+            label: joined ? "Already joined" : "Join The Discord Server",
+            icon: () => React.createElement(Discord, { className: "DrDiscordDiscordLogo" }),
+            action: DrApi.joinOfficialServer
+          })
+        ]
+      }),
+      React.createElement(Menu.MenuSeparator),
+      React.createElement(Menu.MenuItem, {
+        id: "popout-custom-css",
+        label: "Popout Custom CSS",
+        disabled: Boolean(document.getElementById("custom-css-popout")),
+        action: () => {
+          const div = Object.assign(document.createElement("div"), {
+            id: "custom-css-popout"
+          })
+          const header = Object.assign(document.createElement("div"), {
+            id: "custom-css-popout-header"
+          })
+
+          header.append(Object.assign(document.createElement("button"), {
+            onclick: () => {
+              div.remove()
+            },
+            innerText: "Close"
+          }))
+          const content = Object.assign(document.createElement("div"), {
+            id: "custom-css-popout-content-wrapper"
+          })
+          content.append(Object.assign(document.createElement("div"), {
+            id: "custom-css-popout-content"
+          }))
+          div.append(header, content)
+          
+          header.onmousedown = e => {
+            const { clientX, clientY } = e
+            const { x, y, width, height } = div.getBoundingClientRect()
+            function move(e) {
+              let left = (e.clientX - clientX + x)
+              if (left > (innerWidth - width - 1)) left = (innerWidth - width - 1)
+              else if (left < 1) left = 1
+              let top = (e.clientY - clientY + y)
+              if (top > (innerHeight - height - 1)) top = (innerHeight - height - 1)
+              else if (top < 1) top = 1
+
+              div.style.left = `${left}px`
+              div.style.top = `${top}px`
+            }
+            function unMove() {
+              window.removeEventListener("mousemove", move)
+              window.removeEventListener("mouseup", unMove)
+            }
+            window.addEventListener("mousemove", move)
+            window.addEventListener("mouseup", unMove)
+          }
+
+          document.getElementById("app-mount").appendChild(div)
+
+          const resizer = Object.assign(document.createElement("div"), {
+            id: "custom-css-popout-resizer"
+          })
+          div.append(resizer)
+
+          let divRect = div.getBoundingClientRect()
+          div.style.left = `${(innerWidth / 2) - (divRect.width / 2)}px`
+          div.style.top = `${(innerHeight / 2) - (divRect.height / 2)}px`
+          div.style.setProperty("min-width", `${divRect.width + 1}px`)
+          div.style.setProperty("min-height", `${divRect.height + 1}px`)
+          div.style.setProperty("max-width", "700px")
+          div.style.setProperty("max-height", "700px")
+
+          content.style.setProperty("--header", `${header.getBoundingClientRect().height}px`)
+
+          const editor = window.monaco.editor.create(content.childNodes[0], {
+            language: "scss",
+            theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
+            value: DrApi.customCSS.get().scss,
+            minimap: {
+              enabled: false
+            }
+          })
+          editor.onDidChangeModelContent(() => {
+            DrApi.customCSS.update(editor.getValue())
+          })
+
+          resizer.onmousedown = e => {
+            function resize(ev) {
+              let resizerRect = div.getBoundingClientRect()
+              let width = ev.pageX - resizerRect.left
+              let height = ev.pageY - resizerRect.top
+              div.style.width = `${width}px`
+              div.style.height = `${height}px`
+              editor.layout()
+            }
+            function unResize() {
+              window.removeEventListener("mousemove", resize)
+              window.removeEventListener("mouseup", unResize)
+            }
+            window.addEventListener("mousemove", resize)
+            window.addEventListener("mouseup", unResize)
+          }
+        }
+      })
+    ]
+  })
+})
 
 const Button = React.memo(() => {
   const [joined] = React.useState(Boolean(getGuilds()["864267123694370836"]))
@@ -34,62 +196,8 @@ const Button = React.memo(() => {
       }
     ),
     tooltipText: info.name,
-    onContextMenu: (evt) => openContextMenu(evt, () => React.createElement(Menu.default, {
-      onClose: closeContextMenu,
-      navId: "DrApi-context-menu",
-      children: [
-        React.createElement(Menu.MenuItem, {
-          id: "settings",
-          label: "Settings",
-          action: () => openSettings(0),
-          children: [
-            React.createElement(Menu.MenuItem, {
-              id: "settings-plugins",
-              label: "Plugins",
-              icon: () => React.createElement(Icons.Plugins),
-              action: () => openSettings(1)
-            }),
-            React.createElement(Menu.MenuItem, {
-              id: "settings-themes",
-              label: "Themes",
-              icon: () => React.createElement(Icons.Themes),
-              action: () => openSettings(2)
-            }),
-            React.createElement(Menu.MenuItem, {
-              id: "settings-custom-css",
-              label: "Custom CSS",
-              icon: () => React.createElement(Icons.CustomCSS),
-              action: () => openSettings(3)
-            }),
-            React.createElement(Menu.MenuItem, {
-              id: "settings-updater",
-              label: "Updater",
-              icon: () => React.createElement(Icons.Updater),
-              action: () => openSettings(4)
-            }),
-          ]
-        }),
-        React.createElement(Menu.MenuSeparator),
-        React.createElement(Menu.MenuItem, {
-          id: "Misc",
-          label: "Misc",
-          children: [
-            React.createElement(Menu.MenuItem, {
-              id: "update",
-              label: "Update",
-              icon: () => React.createElement(Icons.Updater),
-              action: DrApi.updateDrDiscord
-            }),
-            React.createElement(Menu.MenuSeparator),
-            React.createElement(Menu.MenuItem, {
-              id: "discord-server",
-              label: joined ? "Already joined" : "Join The Discord Server",
-              icon: () => React.createElement(Discord, { className: "DrDiscordDiscordLogo" }),
-              action: DrApi.joinServer
-            })
-          ]
-        })
-      ]
+    onContextMenu: (evt) => openContextMenu(evt, () => React.createElement(Context, {
+      joined
     })),
     onClick: () => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: 0 }))
   })
