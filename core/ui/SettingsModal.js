@@ -227,6 +227,7 @@ module.exports = React.memo(({mProps, PAGE}) => {
   
   return React.createElement(ModalElements.ModalRoot, {
     ...mProps,
+    className: "DrDiscordSettingsModal",
     size: ModalElements.ModalSize.LARGE,
     children: [
       (pi === 0) ? React.createElement("div", {
