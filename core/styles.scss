@@ -56,6 +56,9 @@
   .monaco-editor, .overflow-guard {
     border-radius: 0 0 5px 5px;
   }
+  .context-view {
+    position: fixed;
+  }
 }
 //
 .markup-2BOw-j pre {
@@ -119,10 +122,10 @@
   }
   &-resizer {
     position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 14px;
-    height: 10px;
+    right: -5px;
+    bottom: -5px;
+    width: 15px;
+    height: 15px;
     cursor: nwse-resize;
   }
 }

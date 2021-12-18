@@ -132,6 +132,101 @@ else { console.error("No preload path found!") }
           get: () => {
             let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
             return { css: stylingApi.sass(customCSS || ""), scss: customCSS || "" }
+          },
+          openPopout: () => {
+            const div = Object.assign(document.createElement("div"), {
+              id: "custom-css-popout"
+            })
+            const header = Object.assign(document.createElement("div"), {
+              id: "custom-css-popout-header"
+            })
+  
+            header.append(Object.assign(document.createElement("button"), {
+              onclick: () => {
+                div.remove()
+              },
+              innerText: "Close"
+            }))
+            const content = Object.assign(document.createElement("div"), {
+              id: "custom-css-popout-content-wrapper"
+            })
+            content.append(Object.assign(document.createElement("div"), {
+              id: "custom-css-popout-content"
+            }))
+            div.append(header, content)
+            
+            header.onmousedown = e => {
+              const { clientX, clientY } = e
+              const { x, y, width, height } = div.getBoundingClientRect()
+              function move(e) {
+                let left = (e.clientX - clientX + x)
+                if (left > (innerWidth - width - 1)) left = (innerWidth - width - 1)
+                else if (left < 1) left = 1
+                let top = (e.clientY - clientY + y)
+                if (top > (innerHeight - height - 1)) top = (innerHeight - height - 1)
+                else if (top < 1) top = 1
+  
+                div.style.left = `${left}px`
+                div.style.top = `${top}px`
+              }
+              function unMove() {
+                window.removeEventListener("mousemove", move)
+                window.removeEventListener("mouseup", unMove)
+              }
+              window.addEventListener("mousemove", move)
+              window.addEventListener("mouseup", unMove)
+            }
+  
+            document.getElementById("app-mount").appendChild(div)
+  
+            const resizer = Object.assign(document.createElement("div"), {
+              id: "custom-css-popout-resizer"
+            })
+            div.append(resizer)
+  
+            let divRect = div.getBoundingClientRect()
+            div.style.left = `${(innerWidth / 2) - (divRect.width / 2)}px`
+            div.style.top = `${(innerHeight / 2) - (divRect.height / 2)}px`
+            div.style.minWidth = `${divRect.width + 1}px`
+            div.style.minHeight = `${divRect.height + 1}px`
+            div.style.maxWidth = "700px"
+            div.style.maxHeight = "700px"
+  
+            content.style.setProperty("--header", `${header.getBoundingClientRect().height}px`)
+  
+            const editor = topWindow.monaco.editor.create(content.childNodes[0], {
+              language: "scss",
+              theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
+              value: global.DrApi.customCSS.get().scss,
+              minimap: {
+                enabled: false
+              }
+            })
+            editor.onDidChangeModelContent(() => {
+              global.DrApi.customCSS.update(editor.getValue())
+            })
+  
+            resizer.onmousedown = e => {
+              function resize(ev) {
+                let resizerRect = div.getBoundingClientRect()
+                let width = ev.pageX - resizerRect.left
+                if (width < Number(div.style.minWidth.replace("px", ""))) width = div.style.minWidth
+                if (width > 700) width = "700px"
+                let height = ev.pageY - resizerRect.top
+                if (height < Number(div.style.minHeight.replace("px", ""))) height = div.style.minHeight
+                if (height > 700) height = "700px"
+                
+                div.style.width = `${width}px`
+                div.style.height = `${height}px`
+                editor.layout()
+              }
+              function unResize() {
+                window.removeEventListener("mousemove", resize)
+                window.removeEventListener("mouseup", unResize)
+              }
+              window.addEventListener("mousemove", resize)
+              window.addEventListener("mouseup", unResize)
+            }
           }
         },
         util: {
