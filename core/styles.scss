@@ -131,5 +131,6 @@
 }
 //
 #DrApi-context-menu {
+  --brand-experiment-600: hsl(140, calc(var(--saturation-factor, 1) * 49.6%), 40%);
   --brand-experiment-560: hsl(140, calc(var(--saturation-factor, 1) * 69.6%), 40%);
 }
