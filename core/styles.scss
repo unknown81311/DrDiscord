@@ -129,3 +129,7 @@
     cursor: nwse-resize;
   }
 }
+//
+#DrApi-context-menu {
+  --brand-experiment-560: hsl(140, calc(var(--saturation-factor, 1) * 69.6%), 40%);
+}
