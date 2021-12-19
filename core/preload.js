@@ -60,9 +60,11 @@ else { console.error("No preload path found!") }
       }
     }
     topWindow.requirejs(["vs/editor/editor.main"], function () {})
-    //
+    // Add node require to window
     toWindow(require)
-    //
+    // Add debugger event
+    topWindow.addEventListener("keydown", () => event.code === "F8" && (() => {debugger;})())
+    // Remove discords warnings
     DiscordNative.window.setDevtoolsCallbacks(null, null)
     //
     const patch = require("./patch")
@@ -85,7 +87,7 @@ else { console.error("No preload path found!") }
     //
     let interval = setInterval(() => {
       if (!find(["createElement", "Component"])) return
-      //
+      // clear interval
       clearInterval(interval)
       //
       const DrApi = {
@@ -103,24 +105,23 @@ else { console.error("No preload path found!") }
           functions: find(["openModal", "openModalLazy"]),
           elements: find(["ModalRoot", "ModalListContent"])
         },
-        joinServer: async (code, goTo = true) => {
+        joinServer: (code, goTo = true) => {
           const { transitionToGuild } = find(["transitionToGuild"])
           const { acceptInvite } = find(["acceptInvite"])
 
-          const res = await acceptInvite(code)
-          if (goTo) transitionToGuild(res.guild.id, res.channel.id)
+          const res = acceptInvite(code)
+          if (goTo) res.then(({guild, channel}) => transitionToGuild(guild.id, channel.id))
         },
         joinOfficialServer: () => {
           const { transitionToGuild } = find(["transitionToGuild"])
-          const { acceptInvite } = find(["acceptInvite"])
           const { getGuilds } = find(["getGuilds"])
 
           if (Boolean(getGuilds()["864267123694370836"])) transitionToGuild("864267123694370836", "864659344523001856")
-          else acceptInvite("XkQMaw34").then(({guild, channel}) => transitionToGuild(guild.id, channel.id))
+          else global.DrApi.joinServer("XkQMaw34")
         },
         updateDrDiscord: () => {
           exec(`cd ${process.env.DRDISCORD_DIR} && git stach && git pull`, function(err, res) {
-            if (err) return console.error(err)
+            if (err) console.error(err)
             else ipcRenderer.invoke("RESTART_DISCORD")
           })
         },
@@ -155,8 +156,7 @@ else { console.error("No preload path found!") }
             }))
             div.append(header, content)
             
-            header.onmousedown = e => {
-              const { clientX, clientY } = e
+            header.onmousedown = ({ clientX, clientY }) => {
               const { x, y, width, height } = div.getBoundingClientRect()
               function move(e) {
                 let left = (e.clientX - clientX + x)
@@ -197,16 +197,20 @@ else { console.error("No preload path found!") }
             const editor = topWindow.monaco.editor.create(content.childNodes[0], {
               language: "scss",
               theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
-              value: global.DrApi.customCSS.get().scss,
-              minimap: {
-                enabled: false
-              }
+              value: global.DrApi.customCSS.get().scss
             })
             editor.onDidChangeModelContent(() => {
-              global.DrApi.customCSS.update(editor.getValue())
+              try { global.DrApi.customCSS.update(editor.getValue()) }
+              catch (e) { 
+                // make error group
+                const ere = console.groupCollapsed("Error happened when compiling custom CSS: Click to expand")
+                console.error(e)
+                console.groupEnd(ere)
+              }
             })
+            global.FloatingCSSEditor = editor
   
-            resizer.onmousedown = e => {
+            resizer.onmousedown = () => {
               function resize(ev) {
                 let resizerRect = div.getBoundingClientRect()
                 let width = ev.pageX - resizerRect.left
@@ -266,7 +270,7 @@ else { console.error("No preload path found!") }
             React.createElement(PanelButton)
           )
         })
-        ele.handleMouseEnter()
+        ele.forceUpdate()
         // Patch MessageActions
         patch(codeBlock, "react", ([props], origRes) => {
           if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
@@ -281,6 +285,7 @@ else { console.error("No preload path found!") }
                 if (!customCSS) css = props.content
                 else css = `${customCSS}\n${props.content}`
                 DataStore.setData("DR_DISCORD_SETTINGS", "CSS", css)
+                if (global.FloatingCSSEditor) FloatingCSSEditor.setValue(css)
                 document.getElementById("CUSTOMCSS").innerText = stylingApi.sass(css || "")
               }
             }))
@@ -294,7 +299,7 @@ else { console.error("No preload path found!") }
           res.props.children.push(React.createElement(MenuItem, {
             id: "DrApi-settings",
             label: "DrApi Settings",
-            action: () => {openSettings(0)}
+            action: () => openSettings(0)
           }))
         })
         // Load CC

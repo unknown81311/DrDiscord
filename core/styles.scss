@@ -44,21 +44,18 @@
 }
 //
 .DrDiscordSettingsModal .content-1LAB8Z {
-  height: 400px;
   &[datapage="3"] {
     padding: 0 !important;
     overflow: hidden !important;
-    border-radius: 0;
+    border-radius: 0
   }
-  #custom-css {
-    border-radius: 8px;
+  #custom-css { border-radius: 8px }
+  .monaco-editor, .overflow-guard { border-radius: 0 0 5px 5px }
+  .context-view { 
+    z-index: 999999;
+    position: fixed 
   }
-  .monaco-editor, .overflow-guard {
-    border-radius: 0 0 5px 5px;
-  }
-  .context-view {
-    position: fixed;
-  }
+  height: 400px
 }
 //
 .markup-2BOw-j pre {
@@ -69,33 +66,16 @@
     right: 0;
     border-radius: 4px 0;
     color: var(--header-secondary);
-    background: var(--background-secondary);
     border: 1px solid var(--background-tertiary);
+    background: var(--background-secondary);
     transition: all .2s ease-in-out;
-    &:hover {
-      background: var(--background-tertiary);
-      color: var(--header-primary);
-    }
+    &:hover { color: var(--header-primary) }
   }
 }
 //
-.DR-collapsable-section {
-  margin-bottom: 16px;
-  .DR-collapsable-section-content{
-    &:not(.DR-collapsable-section-content-open) {
-      display: none;
-    }
-  }
-}
+.DrDiscordDiscordLogo { width: 100% }
 //
-.DrDiscordDiscordLogo {
-  width: 100%;
-}
-//
-#custom-css {
-  height: 100%;
-  width: 100%;
-}
+#custom-css { height: 100% }
 //
 #custom-css-popout {
   position: fixed;

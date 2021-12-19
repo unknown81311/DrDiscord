@@ -5,7 +5,7 @@ function logging({
   title = info.name, 
   input = undefined
 }) {
-  console[type](`%c[${title}]%c`, ["font-weight: bold", type === "info" && "color: red"].join(";"), "", ...input)
+  console[type](`%c[${title}]%c`, ["font-weight: bold", type === "info" && "color: hsl(140, 49.6%, 40%)"].join(";"), "", ...input)
 }
 /**
  * @name log

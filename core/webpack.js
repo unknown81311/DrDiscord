@@ -54,30 +54,22 @@ else {
   function byPropsDefault([...props]) {
     return getModule(m => props.every((prop) => typeof m.default?.[prop] !== "undefined"))?.default
   }
+
+  function byPropsAll(...props) {
+    const norm = getModule(m => props.every((prop) => typeof m[prop] !== "undefined"), false)
+    const def = byPropsDefaultAll(props)
+    return [...norm, ...def]
+  }
+  function byPropsDefaultAll([...props]) {
+    return getModule(m => props.every((prop) => typeof m.default?.[prop] !== "undefined"), false)
+  }
+  
+  Object.assign(byPropsAll, {
+    default: byPropsDefaultAll
+  })
   Object.assign(byProps, {
     default: byPropsDefault,
     all: byPropsAll,
-  })
-  
-  /**
-   * @name byProps
-   * @description Uses properties to find the module.
-   * @param {Array} properties
-   * @returns {any}
-   */
-  
-  function byPropsAll(...props) {
-    return byPropsDefault(props) || getModule(m => props.every((prop) => typeof m[prop] !== "undefined"), false)
-  }
-  function byPropsDefaultAll([...props]) {
-    const res = getModule(m => props.every((prop) => typeof m.default?.[prop] !== "undefined"), false)
-    for (const module of res) {
-      
-    }
-    return getModule(m => props.every((prop) => typeof m.default?.[prop] !== "undefined"), false)?.default
-  }
-  Object.assign(byPropsAll, {
-    default: byPropsDefaultAll
   })
   
   /**

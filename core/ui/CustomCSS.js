@@ -30,7 +30,10 @@ module.exports = class CustomCSS extends React.Component {
       const value = this.editor.getValue()
       DataStore.setData("DR_DISCORD_SETTINGS", "CSS", value)
       window.document.getElementById("CUSTOMCSS").textContent = styling.compileSass(value)
+      if (global.FloatingCSSEditor) FloatingCSSEditor.setValue(value)
     })
+    const contextmenu = this.editor.getContribution('editor.contrib.contextmenu')
+    contextmenu._onContextMenu = _ => _
   }
   render() {
     return this.state.error ? React.createElement("div", null, "An error accord with the monaco editor"): React.createElement("div", {
