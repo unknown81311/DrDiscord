@@ -1,12 +1,12 @@
 const _fs = require("fs");
 const _path = require("path");
 
-let DiscordInfo = ["Discord","1.0.9003"]
+let DiscordInfo = ["Discord","1.0.9003"]//wont always be this version need to find latested depending on OS
 
 if (process.argv.includes("DISCORD=")) DiscordInfo = process.argv[process.argv.indexOf("DISCORD=") + 1].split("=");
 
 let PATH = process.platform === "darwin" ? `/Applications/${DiscordInfo[0]}.app/Contents/Resources`
-  : process.platform === "win32" ? _path.join(process.env.HOME, DiscordInfo[0], `/app-${DiscordInfo[1]}/resources`)
+  : process.platform === "win32" ? _path.join(process.env.HOME, "AppData/Local", DiscordInfo[0], `/app-${DiscordInfo[1]}/resources`)
   : console.error("Linux doesnt have a path yet")
 
 if (process.argv.includes("--install")) {
