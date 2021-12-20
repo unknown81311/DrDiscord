@@ -30,7 +30,7 @@ class DataStore {
       const file = this.getFile(name)
       const data = this.getAllData(name)
       data[key] = value
-      _fs.writeFileSync(file, JSON.stringify(data))
+      _fs.writeFileSync(file, JSON.stringify(data, null, 2))
     } 
     catch (error) { Logger.error("DrDiscord", error) }
   }

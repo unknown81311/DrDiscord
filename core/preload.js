@@ -328,7 +328,7 @@ else { console.error("No preload path found!") }
         })
         Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
           get: () => global.DrApi.isDeveloper,
-          set: (_, value) => global.DrApi.isDeveloper = value
+          set: () => console.error("Please use the settings panel to change this value")
         })
         logger.log("DrDiscord", "Loaded!")
       }
