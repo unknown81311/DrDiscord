@@ -1,7 +1,6 @@
 function patch(module, funcName, callback, type = "after") {
   const original = module[funcName]
   if (!module[funcName].__originalFunction) module[funcName].__originalFunction = original
-  const originalFunction = module[funcName].__originalFunction
   if (!module[funcName].__patches) module[funcName].__patches = []
 
   if (type === "after") module[funcName] = function() {
@@ -13,8 +12,8 @@ function patch(module, funcName, callback, type = "after") {
     callback.apply(this, [...arguments])
     return original.apply(this, arguments)
   }
-  else if (type === "instead" || type === "replace") module[funcName] = function() {
-    return callback.apply(this, [[...arguments], originalFunction])
+  else if (type === "instead") module[funcName] = function() {
+    return callback.apply(this, [[...arguments], original])
   }
   else throw new Error(`Unknown patch type: ${type}`)
 

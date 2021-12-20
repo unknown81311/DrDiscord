@@ -6,12 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "node ./installation.js --install",
-    "uninstall": "node ./installation.js --uninstall"
+    "uninstall": "node ./installation.js --uninstall",
+    "update": "npm i && git stache && git pull"
   },
   "author": "Doggybootsy",
   "license": "ISC",
   "dependencies": {
-    "esbuild": "^0.14.2",
     "sass": "^1.44.0"
   },
   "devDependencies": {

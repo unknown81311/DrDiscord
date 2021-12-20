@@ -2,3 +2,4 @@
 settings/*
 plugins/*
 themes/*
+package-lock.json

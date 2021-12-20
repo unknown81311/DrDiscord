@@ -98,6 +98,7 @@ const DrSettings = React.memo(({
 }) => {
   const [cc, setCC] = React.useState(settings.cc)
   const [transparency, setTransparency] = React.useState(settings.transparency)
+  const [isDeveloper, setIsDeveloper] = React.useState(DrApi.isDeveloper)
 
   return React.createElement(React.Fragment, {
     children: [
@@ -150,6 +151,16 @@ const DrSettings = React.memo(({
         ]
       }),
       React.createElement(SwitchItem, {
+        title: "Enable Developer Mode",
+        note: "Warning you can get banned from Discord if you do this (not a 100% chance)!",
+        value: isDeveloper,
+        onChange: (val) => {
+          settings.isDeveloper = val
+          setIsDeveloper(val)
+          DrApi.isDeveloper = val
+        }
+      }),
+      React.createElement(SwitchItem, {
         title: "Load Cumcord",
         note: "Load's Cumcord with DrDiscord, doesn't download anything",
         value: cc,
@@ -174,7 +185,6 @@ const DrSettings = React.memo(({
 })
 
 const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
-  tbc = tbc || 0
   return React.createElement(TabBar, {
     selectedItem: page,
     onItemSelect: setPage,
@@ -223,7 +233,7 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
 module.exports = React.memo(({mProps, PAGE}) => {
   const [pi, setPI] = React.useState(settings.PageItem || 0)
   const [page, setPage] = React.useState(PAGE || 0)
-  const [tbc, setTBC] = React.useState(settings.TabBarContent || 1)
+  const [tbc, setTBC] = React.useState(settings.TabBarContent === 0 ? 0 : settings.TabBarContent)
   
   return React.createElement(ModalElements.ModalRoot, {
     ...mProps,

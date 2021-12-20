@@ -1,4 +1,4 @@
-const { webFrame } = require("electron")
+const { webFrame, ipcRenderer } = require("electron")
 const { Module } = _module = require("module")
 const _path = require("path")
 const _fs = require("fs")
@@ -120,7 +120,7 @@ else { console.error("No preload path found!") }
           else global.DrApi.joinServer("XkQMaw34")
         },
         updateDrDiscord: () => {
-          exec(`cd ${process.env.DRDISCORD_DIR} && git stach && git pull`, function(err, res) {
+          exec(`cd ${process.env.DRDISCORD_DIR} && npm run update`, function(err, res) {
             if (err) console.error(err)
             else ipcRenderer.invoke("RESTART_DISCORD")
           })
@@ -244,7 +244,6 @@ else { console.error("No preload path found!") }
       toWindow("DrApi", DrApi)
       Object.freeze(DrApi)
       for (const key of Object.keys(DrApi)) Object.freeze(DrApi[key])
-      logger.log("DrDiscord", "Loaded!")
       async function start() {
         const {
           React, modal: {
@@ -253,25 +252,24 @@ else { console.error("No preload path found!") }
         } = DrApi
         //
         const { MenuItem } = DrApi.find(["MenuItem"])
-        //
+        // Add react stuff
         const oldLoad = _module._load
         _module._load = function (request) {
+          if (request === "DrApi" || request === "DrApi/") return DrApi
+          if (request.startsWith("DrApi/")) return (() => {
+            request = request.replace("DrApi/", "")
+            let s = request.split("/")
+            let d = DrApi
+            for (let e of s) d = d[e]
+            return d
+          })()
           if (request === "React") return DrApi.React
           if (request === "ReactDOM") return DrApi.ReactDOM
           return oldLoad.apply(this, arguments)
         }
-        const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
-        const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
-        //
-        const PanelButton = require("./ui/PanelButton")
-        //
-        patch(ele.__proto__, "render", (_, res) => {
-          res.props.children[res.props.children.length - 1].props.children.unshift(
-            React.createElement(PanelButton)
-          )
-        })
-        ele.forceUpdate()
         // Patch MessageActions
+        await waitFor(".guilds-1SWlCJ")
+        const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
         patch(codeBlock, "react", ([props], origRes) => {
           if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
           patch(origRes.props, "render", (_, res) => {
@@ -291,17 +289,19 @@ else { console.error("No preload path found!") }
             }))
           })
         })
+        const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
+        //
+        const PanelButton = require("./ui/PanelButton")
+        //
+        patch(ele.__proto__, "render", (_, res) => {
+          res.props.children[res.props.children.length - 1].props.children.unshift(
+            React.createElement(PanelButton)
+          )
+        })
+        ele.forceUpdate()
         //
         const SettingsModal = require("./ui/SettingsModal")
         const openSettings = (page) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page }))
-        //
-        patch(find("UserSettingsCogContextMenu"), "default", (_, res) => {
-          res.props.children.push(React.createElement(MenuItem, {
-            id: "DrApi-settings",
-            label: "DrApi Settings",
-            action: () => openSettings(0)
-          }))
-        })
         // Load CC
         DrApi.request("https://raw.githubusercontent.com/Cumcord/Cumcord/stable/dist/build.js", (err, _, body) => {
           if (err) logger.error(err)
@@ -319,12 +319,18 @@ else { console.error("No preload path found!") }
             }
             toWindow("DrApi", Object.assign({}, DrApi, {
               toggleCC,
-              openSettings
+              openSettings,
+              isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
             }))
             if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
             num++
           }
         })
+        Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
+          get: () => global.DrApi.isDeveloper,
+          set: (_, value) => global.DrApi.isDeveloper = value
+        })
+        logger.log("DrDiscord", "Loaded!")
       }
       start()
     }, 100)

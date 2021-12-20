@@ -14,9 +14,7 @@ const Discord = DrApi.find("Discord").default
 const Icons = require("./Icons")
 const { info } = require("../../package.json")
 const {
-  webFrame: {
-    top: { context:window }
-  }, ipcRenderer
+  ipcRenderer
 } = require("electron")
 
 function openSettings(PAGE) {

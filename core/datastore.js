@@ -18,6 +18,8 @@ class DataStore {
   getData(name, key) {
     try {
       const data = this.getAllData(name)
+      if (data[key] === "") return ""
+      if (data[key] === 0) return 0
       if (data[key]) return data[key]
       else return null
     } 
