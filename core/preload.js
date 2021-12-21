@@ -85,8 +85,8 @@ else { console.error("No preload path found!") }
       stylingApi.inject("DrDiscordStyles", stylingApi.sass({ file: sassStylingFile }))
     })
     //
-    let interval = setInterval(() => {
-      if (!find(["createElement", "Component"])) return
+    let interval = setInterval(async () => {
+      if (!find(["createElement", "Component"])?.createElement) return
       // clear interval
       clearInterval(interval)
       //
@@ -244,95 +244,91 @@ else { console.error("No preload path found!") }
       toWindow("DrApi", DrApi)
       Object.freeze(DrApi)
       for (const key of Object.keys(DrApi)) Object.freeze(DrApi[key])
-      async function start() {
-        const {
-          React, modal: {
-            functions: { openModal },
-          }
-        } = DrApi
-        //
-        const { MenuItem } = DrApi.find(["MenuItem"])
-        // Add react stuff
-        const oldLoad = _module._load
-        _module._load = function (request) {
-          if (request === "DrApi" || request === "DrApi/") return DrApi
-          if (request.startsWith("DrApi/")) return (() => {
-            request = request.replace("DrApi/", "")
-            let s = request.split("/")
-            let d = DrApi
-            for (let e of s) d = d[e]
-            return d
-          })()
-          if (request === "React") return DrApi.React
-          if (request === "ReactDOM") return DrApi.ReactDOM
-          return oldLoad.apply(this, arguments)
+      const {
+        React, modal: {
+          functions: { openModal },
         }
-        // Patch MessageActions
-        await waitFor(".guilds-1SWlCJ")
-        const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
-        patch(codeBlock, "react", ([props], origRes) => {
-          if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
-          patch(origRes.props, "render", (_, res) => {
-            if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
-            res.props.children.push(React.createElement("button", {
-              className: "dr-discord-codeblock-copy-button",
-              children: "Add to custom CSS",
-              onClick: () => {
-                let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
-                let css
-                if (!customCSS) css = props.content
-                else css = `${customCSS}\n${props.content}`
-                DataStore.setData("DR_DISCORD_SETTINGS", "CSS", css)
-                if (global.FloatingCSSEditor) FloatingCSSEditor.setValue(css)
-                document.getElementById("CUSTOMCSS").innerText = stylingApi.sass(css || "")
-              }
-            }))
-          })
-        })
-        const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
-        //
-        const PanelButton = require("./ui/PanelButton")
-        //
-        patch(ele.__proto__, "render", (_, res) => {
-          res.props.children[res.props.children.length - 1].props.children.unshift(
-            React.createElement(PanelButton)
-          )
-        })
-        ele.forceUpdate()
-        //
-        const SettingsModal = require("./ui/SettingsModal")
-        const openSettings = (page) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page }))
-        // Load CC
-        DrApi.request("https://raw.githubusercontent.com/Cumcord/Cumcord/stable/dist/build.js", (err, _, body) => {
-          if (err) logger.error(err)
-          else {
-            let num = 0
-            function toggleCC() {
-              if (topWindow.cumcord) {
-                topWindow.cumcord.uninject()
-                return logger.log("DrDiscord", "Disabled CC")
-              }
-              else {
-                topWindow.eval(body)
-                return Boolean(num) ? logger.log("DrDiscord", "Enabled CC") : null
-              }
-            }
-            toWindow("DrApi", Object.assign({}, DrApi, {
-              toggleCC,
-              openSettings,
-              isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
-            }))
-            if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
-            num++
-          }
-        })
-        Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
-          get: () => global.DrApi.isDeveloper,
-          set: () => console.error("Please use the settings panel to change this value")
-        })
-        logger.log("DrDiscord", "Loaded!")
+      } = DrApi
+      // Add react stuff
+      const oldLoad = _module._load
+      _module._load = function (request) {
+        if (request === "DrApi" || request === "DrApi/") return DrApi
+        if (request.startsWith("DrApi/")) return (() => {
+          request = request.replace("DrApi/", "")
+          let s = request.split("/")
+          let d = DrApi
+          for (let e of s) d = d[e]
+          return d
+        })()
+        if (request === "React") return DrApi.React
+        if (request === "ReactDOM") return DrApi.ReactDOM
+        return oldLoad.apply(this, arguments)
       }
-      start()
+      // Patch MessageActions
+      await waitFor(".guilds-1SWlCJ")
+      //
+      const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
+      patch(codeBlock, "react", ([props], origRes) => {
+        if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
+        patch(origRes.props, "render", (_, res) => {
+          if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
+          res.props.children.push(React.createElement("button", {
+            className: "dr-discord-codeblock-copy-button",
+            children: "Add to custom CSS",
+            onClick: () => {
+              let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
+              let css
+              if (!customCSS) css = props.content
+              else css = `${customCSS}\n${props.content}`
+              DataStore.setData("DR_DISCORD_SETTINGS", "CSS", css)
+              if (global.FloatingCSSEditor) FloatingCSSEditor.setValue(css)
+              document.getElementById("CUSTOMCSS").innerText = stylingApi.sass(css || "")
+            }
+          }))
+        })
+      })
+      const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
+      //
+      const PanelButton = require("./ui/PanelButton")
+      //
+      patch(ele.__proto__, "render", (_, res) => {
+        res.props.children[res.props.children.length - 1].props.children.unshift(
+          React.createElement(PanelButton)
+        )
+      })
+      ele.forceUpdate()
+      //
+      const SettingsModal = require("./ui/SettingsModal")
+      const openSettings = (page) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page }))
+      // Load CC
+      DrApi.request("https://raw.githubusercontent.com/Cumcord/Cumcord/stable/dist/build.js", (err, _, body) => {
+        if (err) logger.error(err)
+        else {
+          let num = 0
+          function toggleCC() {
+            if (topWindow.cumcord) {
+              topWindow.cumcord.uninject()
+              return logger.log("DrDiscord", "Disabled CC")
+            }
+            else {
+              topWindow.eval(body)
+              return Boolean(num) ? logger.log("DrDiscord", "Enabled CC") : null
+            }
+          }
+          toWindow("DrApi", Object.assign({}, DrApi, {
+            toggleCC,
+            openSettings,
+            isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
+          }))
+          if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
+          num++
+        }
+      })
+      Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
+        get: () => global.DrApi.isDeveloper,
+        set: () => console.error("Please use the settings panel to change this value")
+      })
+      logger.log("DrDiscord", "Loaded!")
     }, 100)
   })
 })(webFrame.top.context)

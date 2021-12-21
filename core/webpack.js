@@ -97,10 +97,10 @@ else {
     return getModule(m => m.default?.displayName === displayName) || byDisplayNameType(displayName) || byDisplayNameTypeRender(displayName)
   }
   function byDisplayNameType(displayName) {
-    return getModule(m => m.default?.type?.displayName === displayName)?.default
+    return getModule(m => m.default?.type?.displayName === displayName)
   }
   function byDisplayNameTypeRender(displayName) {
-    return getModule(m => m.default?.type?.render?.displayName === displayName)?.default
+    return getModule(m => m.default?.type?.render?.displayName === displayName)
   }
   Object.assign(byDisplayName, {
     type: byDisplayNameType,
@@ -112,6 +112,14 @@ else {
     props: byProps,
     prototypes: byPrototypes,
     all: (filter) => getModule(filter, false),
+    id: (id) => webpackExports.c[id],
+    getId: (module) => {
+      let toReturn
+      for (let cs in webpackExports.c)
+        if (webpackExports.c[cs].exports === module) 
+          toReturn = cs
+      return toReturn
+    },
     webpackExports
   })
 
