@@ -2,8 +2,6 @@ const _fs = require("fs")
 const _path = require("path")
 const DataStore = require("./datastore")
 
-const topWindow = require("electron").webFrame.top.context
-
 const DrDiscord = DataStore("DR_DISCORD_SETTINGS")
 
 if (!DrDiscord.enabledPlugins) DrDiscord.enabledPlugins = {}
@@ -25,21 +23,22 @@ _fs.readdir(_dir, (err, files) => {
 })
 
 const Plugins = new class {
+  get enabledPlugins() { return DataStore.getData("DR_DISCORD_SETTINGS", "enabledPlugins") }
   get(name) { return plugins.find(p => p.meta.name === name) }
   getAll() { return plugins }
   getEnabled() { return plugins.filter(p => this.isEnabled[p.meta.name]) }
-  isEnabled(name) { return DrDiscord.enabledPlugins[name] || false }
+  isEnabled(name) { return this.enabledPlugins[name] || false }
   getDisabled() { return plugins.filter(p => !this.isEnabled[p.meta.name]) }
   enable(name) {
     const { plugin, meta } = Plugins.get(name)
     if (!plugin) return
-    DataStore.setData("DR_DISCORD_SETTINGS", "enabledPlugins", { ...DrDiscord.enabledPlugins, [meta.name]: true })
+    DataStore.setData("DR_DISCORD_SETTINGS", "enabledPlugins", { ...this.enabledPlugins, [meta.name]: true })
     plugin.onStart()
   }
   disable(name) {
     const { plugin, meta } = Plugins.get(name)
     if (!plugin) return
-    DataStore.setData("DR_DISCORD_SETTINGS", "enabledPlugins", { ...DrDiscord.enabledPlugins, [meta.name]: false })
+    DataStore.setData("DR_DISCORD_SETTINGS", "enabledPlugins", { ...this.enabledPlugins, [meta.name]: false })
     plugin.onStop()
   }
   toggle(name) { return this.isEnabled(name) ? this.disable(name) : this.enable(name) }

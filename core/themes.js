@@ -32,14 +32,15 @@ _fs.readdir(_dir, (err, files) => {
 })
 
 const Themes = new class {
+  get enabledThemes() { return DataStore.getData("DR_DISCORD_SETTINGS", "enabledThemes") }
   get(name) { return themes.find(p => p.meta.name === name) }
   getAll() { return themes }
   getEnabled() { return themes.filter(p => this.isEnabled[p.meta.name]) }
-  isEnabled(name) { return DrDiscord.enabledThemes[name] || false }
+  isEnabled(name) { return this.enabledThemes[name] || false }
   getDisabled() { return themes.filter(p => !this.isEnabled[p.meta.name]) }
   enable(name) {
     const { meta } = Themes.get(name)
-    DataStore.setData("DR_DISCORD_SETTINGS", "enabledThemes", { ...DrDiscord.enabledThemes, [meta.name]: true })
+    DataStore.setData("DR_DISCORD_SETTINGS", "enabledThemes", { ...this.enabledThemes, [meta.name]: true })
     document.querySelector("drdiscord").appendChild(Object.assign(document.createElement("style"), {
       innerHTML: meta.css,
       id: `drdiscord-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`
@@ -47,7 +48,7 @@ const Themes = new class {
   }
   disable(name) {
     const { meta } = Themes.get(name)
-    DataStore.setData("DR_DISCORD_SETTINGS", "enabledThemes", { ...DrDiscord.enabledThemes, [meta.name]: false })
+    DataStore.setData("DR_DISCORD_SETTINGS", "enabledThemes", { ...this.enabledThemes, [meta.name]: false })
     document.querySelector(`#drdiscord-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`).remove()
   }
   toggle(name) { return this.isEnabled(name) ? this.disable(name) : this.enable(name) }

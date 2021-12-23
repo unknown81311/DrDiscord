@@ -300,7 +300,32 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
     ]
   })
 })
-
+class Themes extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  render() {
+    return React.createElement("div", {
+      className: "DrDiscordSettingsAddons",
+      children: DrApi.Themes.getAll().map(theme => React.createElement(Card, {
+        ...theme, type: "Themes",
+      }))
+    })
+  }
+}
+class Plugins extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  render() {
+    return React.createElement("div", {
+      className: "DrDiscordSettingsAddons",
+      children: DrApi.Plugins.getAll().map(theme => React.createElement(Card, {
+        ...theme, type: "Plugins",
+      }))
+    })
+  }
+}
 module.exports = React.memo(({mProps, PAGE}) => {
   const [pi, setPI] = React.useState(settings.PageItem || 0)
   const [page, setPage] = React.useState(PAGE || 0)
@@ -351,17 +376,7 @@ module.exports = React.memo(({mProps, PAGE}) => {
           page === 0 ? React.createElement(DrSettings, {
             PageItem: { pi, setPI },
             TabBarContent: { tbc, setTBC }
-          }) : page === 1 ? React.createElement("div", {
-            className: "DrDiscordSettingsAddons",
-            children: DrApi.Plugins.getAll().map(plugin => React.createElement(Card, {
-              ...plugin, type: "Plugins",
-            }))
-          }) : page === 2 ? React.createElement("div", {
-            className: "DrDiscordSettingsAddons",
-            children: DrApi.Themes.getAll().map(theme => React.createElement(Card, {
-              ...theme, type: "Themes",
-            }))
-          }) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : null,
+          }) : page === 1 ? React.createElement(Plugins) : page === 2 ? React.createElement(Themes) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : null,
         ]
       })
     ]
