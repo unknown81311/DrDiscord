@@ -264,7 +264,7 @@ else { console.error("No preload path found!") }
         if (request === "ReactDOM") return DrApi.ReactDOM
         return oldLoad.apply(this, arguments)
       }
-      // Patch MessageActions
+      // 
       await waitFor(".guilds-1SWlCJ")
       //
       const { codeBlock } = find(["parse", "parseTopic"]).defaultRules

@@ -5,15 +5,15 @@ function patch(module, funcName, callback, type = "after") {
 
   if (type === "after") module[funcName] = function() {
     const result = original.apply(this, arguments)
-    callback.apply(this, [[...arguments], result])
+    callback.apply(this, [[...arguments], result, this])
     return result
   }
   else if (type === "before") module[funcName] = function() {
-    callback.apply(this, [...arguments])
+    callback.apply(this, [[...arguments], this])
     return original.apply(this, arguments)
   }
   else if (type === "instead") module[funcName] = function() {
-    return callback.apply(this, [[...arguments], original])
+    return callback.apply(this, [[...arguments], original, this])
   }
   else throw new Error(`Unknown patch type: ${type}`)
 
