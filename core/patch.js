@@ -44,7 +44,7 @@ function patch(name, module, funcName, callback, opts = {}) {
   }
   if (patches[name]) patches[name].push(unpatch)
   else patches[name] = [unpatch]
-  return () => DrApi.patch.unpatchAll(name)
+  return () => unpatch()
 }
 
 Object.assign(patch, {
