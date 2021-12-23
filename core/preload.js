@@ -329,6 +329,9 @@ else { console.error("No preload path found!") }
         set: () => console.error("Please use the settings panel to change this value")
       })
       logger.log("DrDiscord", "Loaded!")
+
+      //add cosmetics
+      DrApi.find(["getGuild"]).getGuild("864267123694370836").features.add("VERIFIED")
     }, 100)
   })
 })(webFrame.top.context)
