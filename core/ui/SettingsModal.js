@@ -99,6 +99,7 @@ const DrSettings = React.memo(({
   const [cc, setCC] = React.useState(settings.cc)
   const [transparency, setTransparency] = React.useState(settings.transparency)
   const [isDeveloper, setIsDeveloper] = React.useState(DrApi.isDeveloper)
+  const [minimalMode, setMinimalMode] = React.useState(settings.minimalMode)
 
   return React.createElement(React.Fragment, {
     children: [
@@ -158,6 +159,16 @@ const DrSettings = React.memo(({
           settings.isDeveloper = val
           setIsDeveloper(val)
           DrApi.isDeveloper = val
+        }
+      }),
+      React.createElement(SwitchItem, {
+        title: "Minimal Mode",
+        note: "May cause issues with themes",
+        value: minimalMode,
+        onChange: (val) => {
+          settings.minimalMode = val
+          document.body.classList.toggle("minimal-mode")
+          setMinimalMode(val)
         }
       }),
       React.createElement(SwitchItem, {

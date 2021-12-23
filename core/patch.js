@@ -1,5 +1,17 @@
-function patch(module, funcName, callback, type = "after") {
+let patches = {
+  
+}
+
+function patch(name, module, funcName, callback, opts = {}) {
+  if (!name) throw new error("Name is required")
+  if (!module) throw new error("Module is required")
+  if (!funcName) throw new error("FuncName is required")
+  if (!callback) throw new error("Callback is required")
+
+  const { type = "after" } = opts
+  
   const original = module[funcName]
+
   if (!module[funcName].__originalFunction) module[funcName].__originalFunction = original
   if (!module[funcName].__patches) module[funcName].__patches = []
 
@@ -22,20 +34,29 @@ function patch(module, funcName, callback, type = "after") {
       module[funcName][key] = original[key]
 
   const position = module[funcName].__patches.push([module, funcName, callback, type]) - 1
-  // Unpatch all patches on 'module[funcName]', then re-patch them unless they are the one getting unpatched
-  return () => {
+  function unpatch() {
     module[funcName] = module[funcName].__originalFunction
     module[funcName].__patches.splice(position, 1)
     const oldPatches = module[funcName].__patches
     module[funcName].__patches = []
     for (const _patch of oldPatches) setImmediate(patch, ..._patch)
   }
+  if (patches[name]) patches[name].push(unpatch)
+  else patches[name] = [unpatch]
+  return unpatch
 }
 
 Object.assign(patch, {
-  before: (module, funcName, callback) => patch(module, funcName, callback, "before"),
-  after: (module, funcName, callback) => patch(module, funcName, callback, "after"),
-  instead: (module, funcName, callback) => patch(module, funcName, callback, "instead")
+  before: (name, module, funcName, callback, opts) => patch(name, module, funcName, callback, { ...opts, type: "before" }),
+  after: (name, module, funcName, callback, opts) => patch(name, module, funcName, callback, { ...opts, type: "after" }),
+  instead: (name, module, funcName, callback, opts) => patch(name, module, funcName, callback, { ...opts, type: "instead" }),
+  patches,
+  unpatchAll: (name) => {
+    if (name.startsWith("DrDiscordInternal")) return "DO NOT UNPATCH INTERNAL FUNCTIONS"
+    let Patches = patches[name]
+    if (!Patches) return 
+    if (Array.isArray(Patches)) for (const Patch of Patches) Patch()
+  }
 })
 
 module.exports = patch

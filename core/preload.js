@@ -45,6 +45,8 @@ else { console.error("No preload path found!") }
     return elem
   }
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
+    //
+    document.body.classList.add("DrDiscord")
     // Monaco
     const requirejsModule = await fetch("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js").then(e => e.text())
     topWindow.eval(requirejsModule)
@@ -70,12 +72,15 @@ else { console.error("No preload path found!") }
     const patch = require("./patch")
     const find = require("./webpack")
     const stylingApi = require("./stylings")
-    //
+    // Add custom css
     let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
     topWindow.document.head.append(Object.assign(document.createElement("style"), {
       textContent: stylingApi.sass(customCSS || ""),
       id: "CUSTOMCSS"
     }))
+    // Add minimal mode
+    let minimalMode = DataStore.getData("DR_DISCORD_SETTINGS", "minimalMode")
+    if (minimalMode) document.body.classList.toggle("minimal-mode")
     //
     const sassStylingFile = _path.join(__dirname, "styles.scss")
     stylingApi.inject("DrDiscordStyles", stylingApi.sass({ file: sassStylingFile }))
@@ -268,7 +273,7 @@ else { console.error("No preload path found!") }
       await waitFor(".guilds-1SWlCJ")
       //
       const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
-      patch(codeBlock, "react", ([props], origRes) => {
+      patch("DrDiscordInternal-CodeBlock-Patch", codeBlock, "react", ([props], origRes) => {
         if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
         patch(origRes.props, "render", (_, res) => {
           if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
@@ -291,7 +296,7 @@ else { console.error("No preload path found!") }
       //
       const PanelButton = require("./ui/PanelButton")
       //
-      patch(ele.__proto__, "render", (_, res) => {
+      patch("DrDiscordInternal-Panel-Patch", ele.__proto__, "render", (_, res) => {
         res.props.children[res.props.children.length - 1].props.children.unshift(
           React.createElement(PanelButton)
         )
