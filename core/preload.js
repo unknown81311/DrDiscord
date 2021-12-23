@@ -245,6 +245,7 @@ else { console.error("No preload path found!") }
           getOwnerInstance,
           getReactInstance
         },
+        isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
       }
       toWindow("DrApi", DrApi)
       Object.freeze(DrApi)
@@ -275,7 +276,7 @@ else { console.error("No preload path found!") }
       const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
       patch("DrDiscordInternal-CodeBlock-Patch", codeBlock, "react", ([props], origRes) => {
         if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
-        patch(origRes.props, "render", (_, res) => {
+        patch.quick(origRes.props, "render", (_, res) => {
           if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
           res.props.children.push(React.createElement("button", {
             className: "dr-discord-codeblock-copy-button",
@@ -322,8 +323,7 @@ else { console.error("No preload path found!") }
           }
           toWindow("DrApi", Object.assign({}, DrApi, {
             toggleCC,
-            openSettings,
-            isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
+            openSettings
           }))
           if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
           num++
@@ -336,7 +336,7 @@ else { console.error("No preload path found!") }
       logger.log("DrDiscord", "Loaded!")
 
       //add cosmetics
-      DrApi.find(["getGuild"]).getGuild("864267123694370836").features.add("VERIFIED")
+      DrApi.find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
     }, 100)
   })
 })(webFrame.top.context)

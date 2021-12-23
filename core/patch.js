@@ -3,10 +3,10 @@ let patches = {
 }
 
 function patch(name, module, funcName, callback, opts = {}) {
-  if (!name) throw new error("Name is required")
-  if (!module) throw new error("Module is required")
-  if (!funcName) throw new error("FuncName is required")
-  if (!callback) throw new error("Callback is required")
+  if (!name) throw new Error("Name is required")
+  if (!module) throw new Error("Module is required")
+  if (!funcName) throw new Error("FuncName is required")
+  if (!callback) throw new Error("Callback is required")
 
   const { type = "after" } = opts
   
@@ -56,6 +56,12 @@ Object.assign(patch, {
     let Patches = patches[name]
     if (!Patches) return 
     if (Array.isArray(Patches)) for (const Patch of Patches) Patch()
+  },
+  quick: (...args) => {
+    let id = Math.random() * Date.now()
+    const patched = patch(id, ...args)
+    delete patches[id]
+    return patched
   }
 })
 

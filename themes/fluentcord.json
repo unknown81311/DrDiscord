@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "name": "Fluentcord",
+    "author": "Doggybootsy#1333",
+    "version": "1.0.0",
+    "description": "A theme based on Fluentcord.",
+    "source": "https://github.com/doggybootsy/Fluentcord",
+    "website": "https://doggybootsy.github.io/"
+  },
+  "imports": [
+    {
+      "src": "https://doggybootsy.github.io/FluentCord/dist/compiled.css",
+      "enabled": true,
+      "optionable": false
+    }
+  ],
+  "variables": {
+    "primary-background": {
+      "value": "#2e3136",
+      "type": "color"
+    },
+    "secondary-background": {
+      "value": "#2d3035",
+      "type": "color"
+    },
+    "background-tertiary2": {
+      "value": "#2a2b2f",
+      "type": "color"
+    },
+    "border": {
+      "value": "#202022",
+      "type": "color"
+    },
+    "border2": {
+      "value": "#4f5257",
+      "type": "color"
+    },
+    "main-color": {
+      "value": "#7289DA",
+      "type": "color"
+    },
+    "guilds_opacity": {
+      "value": "0.95",
+      "type": "slider",
+      "values": {
+        "min": "0",
+        "max": "1"
+      }
+    },
+    "channel_opacity": {
+      "value": "0.95",
+      "type": "slider",
+      "values": {
+        "min": "0",
+        "max": "1"
+      }
+    },
+    "version-1-0-0": {
+      "value": "none"
+    }
+  }
+}
