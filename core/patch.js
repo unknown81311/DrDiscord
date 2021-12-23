@@ -35,6 +35,7 @@ function patch(name, module, funcName, callback, opts = {}) {
 
   const position = module[funcName].__patches.push([module, funcName, callback, type]) - 1
   function unpatch() {
+    delete patches[name]
     module[funcName] = module[funcName].__originalFunction
     module[funcName].__patches.splice(position, 1)
     const oldPatches = module[funcName].__patches
@@ -43,7 +44,7 @@ function patch(name, module, funcName, callback, opts = {}) {
   }
   if (patches[name]) patches[name].push(unpatch)
   else patches[name] = [unpatch]
-  return unpatch
+  return () => DrApi.patch.unpatchAll(name)
 }
 
 Object.assign(patch, {

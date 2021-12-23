@@ -47,6 +47,9 @@ else { console.error("No preload path found!") }
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
     //
     document.body.classList.add("DrDiscord")
+    //
+    const stylingApi = require("./stylings")
+    const Themes = require("./themes")
     // Monaco
     const requirejsModule = await fetch("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js").then(e => e.text())
     topWindow.eval(requirejsModule)
@@ -71,7 +74,6 @@ else { console.error("No preload path found!") }
     //
     const patch = require("./patch")
     const find = require("./webpack")
-    const stylingApi = require("./stylings")
     // Add custom css
     let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
     topWindow.document.head.append(Object.assign(document.createElement("style"), {
@@ -96,7 +98,7 @@ else { console.error("No preload path found!") }
       clearInterval(interval)
       //
       const DrApi = {
-        patch, find, DataStore,
+        patch, find, DataStore, Themes,
         React: {...find(["createElement", "Component"])},
         ReactDOM: {...find(["render", "hydrate"])},
         ReactSpring: {...find(["useSpring", "useTransition"])},
@@ -248,8 +250,6 @@ else { console.error("No preload path found!") }
         isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
       }
       toWindow("DrApi", DrApi)
-      Object.freeze(DrApi)
-      for (const key of Object.keys(DrApi)) Object.freeze(DrApi[key])
       const {
         React, modal: {
           functions: { openModal },
@@ -321,9 +321,11 @@ else { console.error("No preload path found!") }
               return Boolean(num) ? logger.log("DrDiscord", "Enabled CC") : null
             }
           }
+          let plugins = require("./plugins")
           toWindow("DrApi", Object.assign({}, DrApi, {
             toggleCC,
-            openSettings
+            openSettings,
+            Plugins: plugins
           }))
           if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
           num++
@@ -334,7 +336,7 @@ else { console.error("No preload path found!") }
         set: () => console.error("Please use the settings panel to change this value")
       })
       logger.log("DrDiscord", "Loaded!")
-
+      //
       //add cosmetics
       DrApi.find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
     }, 100)

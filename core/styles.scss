@@ -178,3 +178,54 @@
     }
   }
 }
+//
+.DrDiscordSettingsAddons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 6px;
+  color: var(--text-normal);
+  .DrDiscord-card {
+    border-radius: 4px;
+    padding: 6px;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-secondary-alt);
+    &:last-child:first-child {
+      width: 200%
+    }
+    &:hover {
+      background-color: var(--background-secondary-alt);
+      border: 1px solid var(--background-secondary);
+    }
+    &-header{
+      &-top {
+        margin-bottom: 4px;
+        display: flex;
+      }
+      &-name {
+        margin-right: 6px;
+        font-weight: bold;
+        font-size: 20px;
+      }
+      &-version {
+        font-size: 14px;
+        color: var(--text-muted);
+        transform: translateY(4px);
+      }
+      &-wrapper {
+        padding: 6px;
+      }
+    }
+    &-content-wrapper {
+      padding: 6px;
+    }
+    &-footer {
+      &-wrapper {
+        padding: 6px;
+      }
+      &-switch {
+        margin-left: auto;
+      }
+      display: flex;
+    }
+  }
+}

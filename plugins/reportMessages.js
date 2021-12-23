@@ -1,19 +1,19 @@
 const MiniPopover = DrApi.find("MiniPopover")
 
-let remove = () => {}
-
 const plugin = {
   onStart: () => {
-    remove = DrApi.patch("reportMessages", MiniPopover, "default", ([args]) => {
-      const child = args.children.find(e => typeof e?.props?.canReport === "boolaen")
+    DrApi.patch("reportMessages", MiniPopover, "default", ([args]) => {
+      const child = args.children.find(e => e?.type)
       if (child) child.props.canReport = true
     })
   },
-  onStop: remove
+  onStop: () => DrApi.patch.unpatchAll("reportMessages")
 }
 const meta = {
   name: "reportMessages",
   version: "1.0.0",
+  author: "Doggybootsy",
+  description: "Adds the ability to report messages to Discord"
 }
 
 module.exports = { plugin, meta }

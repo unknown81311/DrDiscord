@@ -15,12 +15,72 @@ const Gear = DrApi.find("Gear").default
 const { SingleSelect } = DrApi.find(["SingleSelect"])
 const { FormItem, FormText } = DrApi.find(["FormItem", "FormText"])
 const Button = DrApi.find(["ButtonColors"])
-
+const Switch = DrApi.find("Switch").default
 const Icons = require("./Icons")
 
 const CustomCSS = require("./CustomCSS")
 
 const settings = DataStore("DR_DISCORD_SETTINGS")
+
+const Card = React.memo(({ meta, type }) => {
+  const [enabled, setEnabled] = React.useState(DrApi[type].isEnabled(meta.name))
+  return React.createElement("div", {
+    className: "DrDiscord-card",
+    type, id: meta.name,
+    children: [
+      React.createElement("div", {
+        className: "DrDiscord-card-header-wrapper",
+        children: React.createElement("div", {
+          className: "DrDiscord-card-header",
+          children: [
+            React.createElement("div", {
+              className: "DrDiscord-card-header-top",
+              children: [
+                React.createElement("div", {
+                  className: "DrDiscord-card-header-name",
+                  children: meta.name
+                }),
+                React.createElement("div", {
+                  className: "DrDiscord-card-header-version",
+                  children: `v${meta.version}`
+                }),
+              ]
+            }),
+            React.createElement("div", {
+              className: "DrDiscord-card-header-author",
+              children: meta.author
+            })
+          ]
+        })
+      }),
+      React.createElement("div", {
+        className: "DrDiscord-card-content-wrapper",
+        children: React.createElement("div", {
+          className: "DrDiscord-content-footer",
+          children: meta.description
+        })
+      }),
+      React.createElement("div", {
+        className: "DrDiscord-card-footer-wrapper",
+        children: React.createElement("div", {
+          className: "DrDiscord-card-footer",
+          children: [
+            React.createElement("div", {
+              className: "DrDiscord-card-footer-switch",
+              children: React.createElement(Switch, {
+                checked: enabled,
+                onChange: () => {
+                  DrApi[type].toggle(meta.name)
+                  setEnabled(!enabled)
+                }
+              })
+            })
+          ]
+        })
+      }),
+    ]
+  })
+})
 
 const Updater = React.memo(() => {
   const [updating, setUpdating] = React.useState(0)
@@ -291,7 +351,17 @@ module.exports = React.memo(({mProps, PAGE}) => {
           page === 0 ? React.createElement(DrSettings, {
             PageItem: { pi, setPI },
             TabBarContent: { tbc, setTBC }
-          }) : page === 1 ? React.createElement(Text, null, "PLUGIN PAGE") : page === 2 ? React.createElement(Text, null, "THEME PAGE") : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : null,
+          }) : page === 1 ? React.createElement("div", {
+            className: "DrDiscordSettingsAddons",
+            children: DrApi.Plugins.getAll().map(plugin => React.createElement(Card, {
+              ...plugin, type: "Plugins",
+            }))
+          }) : page === 2 ? React.createElement("div", {
+            className: "DrDiscordSettingsAddons",
+            children: DrApi.Themes.getAll().map(theme => React.createElement(Card, {
+              ...theme, type: "Themes",
+            }))
+          }) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : null,
         ]
       })
     ]

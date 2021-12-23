@@ -41,7 +41,7 @@ ipcMain.handle("COMPILE_SASS", (_, sass) => {
 })
 ipcMain.handle("RESTART_DISCORD", () => {
   electron.app.relaunch()
-  process.platform === "darwin" ? electron.app.quit() : electron.app.exit()
+  electron.app.quit()
 })
 
 
