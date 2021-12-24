@@ -258,14 +258,6 @@ else { console.error("No preload path found!") }
       // Add react stuff
       const oldLoad = _module._load
       _module._load = function (request) {
-        if (request === "DrApi" || request === "DrApi/") return DrApi
-        if (request.startsWith("DrApi/")) return (() => {
-          request = request.replace("DrApi/", "")
-          let s = request.split("/")
-          let d = DrApi
-          for (let e of s) d = d[e]
-          return d
-        })()
         if (request === "React") return DrApi.React
         if (request === "ReactDOM") return DrApi.ReactDOM
         return oldLoad.apply(this, arguments)
@@ -295,6 +287,9 @@ else { console.error("No preload path found!") }
       })
       const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
       //
+      let Plugins = require("./plugins")
+      DrApi.Plugins = Plugins
+      //
       const PanelButton = require("./ui/PanelButton")
       //
       patch("DrDiscordInternal-Panel-Patch", ele.__proto__, "render", (_, res) => {
@@ -321,11 +316,9 @@ else { console.error("No preload path found!") }
               return Boolean(num) ? logger.log("DrDiscord", "Enabled CC") : null
             }
           }
-          let plugins = require("./plugins")
           toWindow("DrApi", Object.assign({}, DrApi, {
             toggleCC,
-            openSettings,
-            Plugins: plugins
+            openSettings
           }))
           if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
           num++
