@@ -382,11 +382,9 @@ else { console.error("No preload path found!") }
         }
       })
       Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
-        get: () => global.DrApi.isDeveloper,
-        set: () => console.error("Please use the settings panel to change this value")
+        get: () => global.DrApi.isDeveloper
       })
       logger.log("DrDiscord", "Loaded!")
-      //
       //add cosmetics
       DrApi.find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
     }, 100)
