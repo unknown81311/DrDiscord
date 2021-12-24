@@ -62,5 +62,6 @@ module.exports = {
   getDisabled: () => Themes.getDisabled(),
   enable: (name) => Themes.enable(name),
   disable: (name) => Themes.disable(name),
-  toggle: (name) => Themes.toggle(name)
+  toggle: (name) => Themes.toggle(name),
+  folder: _dir
 }

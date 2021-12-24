@@ -60,7 +60,7 @@
 //
 .markup-2BOw-j pre {
   position: relative;
-  .dr-discord-codeblock-copy-button {
+  .dr-discord-codeblock-copy-button, .dr-discord-codeblock-add-plugin {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -182,6 +182,23 @@
   }
 }
 //
+.DrDiscordSettingsTop {
+  display: flex;
+  width: 100%;
+  margin-bottom: 10px;
+  & > button {
+    width: 100%;
+    flex: 0 6 auto;
+  }
+  & > div {
+    display: flex;
+    width: 100%;
+    & > :first-child {
+      flex: 1;
+      margin: 0 10px 0 40px
+    }
+  }
+}
 .DrDiscordSettingsAddons {
   display: grid;
   grid-template-columns: 1fr 1fr;

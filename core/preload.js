@@ -132,6 +132,27 @@ else { console.error("No preload path found!") }
             else ipcRenderer.invoke("RESTART_DISCORD")
           })
         },
+        showConfirmationModal(title, content, options = {}) {
+          const Markdown = DrApi.find(m => m.default?.displayName === "Markdown" && m.default.rules).default
+          const ConfirmationModal = DrApi.find("ConfirmModal").default
+          const Button = DrApi.find(["ButtonColors"])
+          const { Messages } = DrApi.find(m => m.default?.Messages?.OKAY).default
+
+          const emptyFunction = () => {}
+          const {onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = Messages.OKAY, cancelText = Messages.CANCEL, danger = false, key = undefined} = options
+          if (!Array.isArray(content)) content = [content]
+          content = content.map(c => typeof(c) === "string" ? React.createElement(Markdown, null, c) : c)
+          return openModal(props => {
+            return React.createElement(ConfirmationModal, Object.assign({
+              header: title,
+              confirmButtonColor: danger ? Button.ButtonColors.RED : Button.ButtonColors.BRAND,
+              confirmText: confirmText,
+              cancelText: cancelText,
+              onConfirm: onConfirm,
+              onCancel: onCancel
+            }, props), content)
+          }, {modalKey: key})
+        },
         customCSS: {
           update: (scss) => {
             DataStore.setData("DR_DISCORD_SETTINGS", "CSS", scss)
@@ -253,6 +274,7 @@ else { console.error("No preload path found!") }
       const {
         React, modal: {
           functions: { openModal },
+          elements
         }
       } = DrApi
       // Add react stuff
@@ -266,24 +288,59 @@ else { console.error("No preload path found!") }
       await waitFor(".guilds-1SWlCJ")
       //
       const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
+      const TextInput = DrApi.find("TextInput").default
       patch("DrDiscordInternal-CodeBlock-Patch", codeBlock, "react", ([props], origRes) => {
-        if (props.type !== "codeBlock" || !props.lang.endsWith("css")) return 
-        patch.quick(origRes.props, "render", (_, res) => {
-          if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
-          res.props.children.push(React.createElement("button", {
-            className: "dr-discord-codeblock-copy-button",
-            children: "Add to custom CSS",
-            onClick: () => {
-              let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
-              let css
-              if (!customCSS) css = props.content
-              else css = `${customCSS}\n${props.content}`
-              DataStore.setData("DR_DISCORD_SETTINGS", "CSS", css)
-              if (global.FloatingCSSEditor) FloatingCSSEditor.setValue(css)
-              document.getElementById("CUSTOMCSS").innerText = stylingApi.sass(css || "")
-            }
-          }))
-        })
+        if (props.type !== "codeBlock") return 
+        if (props.lang === "plugin") {
+          patch.quick(origRes.props, "render", ([renderProps], res) => {
+            renderProps.hasLanguage("js")
+            if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
+            res.props.children.push(React.createElement("button", {
+              className: "dr-discord-codeblock-add-plugin",
+              children: "Add Plugin",
+              onClick: () => {
+                let nameVal = ""
+                DrApi.showConfirmationModal("Install Plugin", [
+                  "Whats this plugins name?",
+                  React.createElement((() => React.memo(() => {
+                    const [name, setName] = React.useState(nameVal)
+                    return React.createElement(TextInput, {
+                      value: name,
+                      onInput: e => {
+                        setName(e.target.value)
+                        nameVal = e.target.value
+                      },
+                      placeholder: "Plugin Name"
+                    })
+                  }))())
+                ], {
+                  confirmText: "Install",
+                  onConfirm: () => {
+                    _fs.writeFileSync(_path.join(DrApi.Plugins.folder, `${nameVal}.js`), props.content, "utf8")
+                  }
+                })
+              }
+            }))
+          })
+        }
+        if (props.lang.endsWith("css")) {
+          patch.quick(origRes.props, "render", (_, res) => {
+            if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
+            res.props.children.push(React.createElement("button", {
+              className: "dr-discord-codeblock-copy-button",
+              children: "Add to custom CSS",
+              onClick: () => {
+                let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
+                let css
+                if (!customCSS) css = props.content
+                else css = `${customCSS}\n${props.content}`
+                DataStore.setData("DR_DISCORD_SETTINGS", "CSS", css)
+                if (global.FloatingCSSEditor) FloatingCSSEditor.setValue(css)
+                document.getElementById("CUSTOMCSS").innerText = stylingApi.sass(css || "")
+              }
+            }))
+          })
+        }
       })
       const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
       //

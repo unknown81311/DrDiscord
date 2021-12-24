@@ -52,5 +52,6 @@ module.exports = {
   getDisabled: () => Plugins.getDisabled(),
   enable: (name) => Plugins.enable(name),
   disable: (name) => Plugins.disable(name),
-  toggle: (name) => Plugins.toggle(name)
+  toggle: (name) => Plugins.toggle(name),
+  folder: _dir
 }

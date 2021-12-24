@@ -1,6 +1,9 @@
 const { info } = require("../../package.json")
 const DataStore = require("../datastore")
-const { ipcRenderer } = require("electron")
+const { ipcRenderer, shell } = require("electron")
+const _fs = require("fs")
+const _path = require("path")
+
 const {
   React
 } = DrApi
@@ -17,6 +20,7 @@ const { FormItem, FormText } = DrApi.find(["FormItem", "FormText"])
 const Button = DrApi.find(["ButtonColors"])
 const Switch = DrApi.find("Switch").default
 const Icons = require("./Icons")
+const TextInput = DrApi.find("TextInput").default
 
 const CustomCSS = require("./CustomCSS")
 
@@ -303,26 +307,100 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
 class Themes extends React.Component {
   constructor(props) {
     super(props)
+    this.state = { url: "" }
   }
   render() {
     return React.createElement("div", {
-      className: "DrDiscordSettingsAddons",
-      children: DrApi.Themes.getAll().map(theme => React.createElement(Card, {
-        ...theme, type: "Themes",
-      }))
+      children: [
+        React.createElement("div", {
+          className: "DrDiscordSettingsTop",
+          children: [
+            React.createElement(Button.default, {
+              children: "Open Folder",
+              onClick: () => shell.openPath(DrApi.Themes.folder)
+            }),
+            React.createElement("div", {
+              children: [
+                React.createElement(TextInput, {
+                  placeholder: "URL",
+                  value: this.state.url,
+                  onChange: (val) => this.setState({ url: val })
+                }),
+                React.createElement(Button.default, {
+                  children: "Install",
+                  onClick: () => {
+                    const FileName = this.state.url.split('/').pop().split('#')[0].split('?')[0]
+                    if (!(!FileName.endsWith(".css") || !FileName.endsWith(".scss"))) return 
+                    DrApi.request(this.state.url, (err, _, body) => {
+                      if (err) throw new Error("Failed to install plugin")
+                      _fs.writeFileSync(_path.join(DrApi.Themes.folder, FileName), body, "utf8")
+                      this.setState({ url: "" })
+                    })
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+        React.createElement("div", {
+          className: "DrDiscordSettingsAddons",
+          children: [
+            DrApi.Themes.getAll().map(theme => React.createElement(Card, {
+              ...theme, type: "Themes",
+            }))
+          ]
+        })
+      ]
     })
   }
 }
 class Plugins extends React.Component {
   constructor(props) {
     super(props)
+    this.state = { url: "" }
   }
   render() {
     return React.createElement("div", {
-      className: "DrDiscordSettingsAddons",
-      children: DrApi.Plugins.getAll().map(theme => React.createElement(Card, {
-        ...theme, type: "Plugins",
-      }))
+      children: [
+        React.createElement("div", {
+          className: "DrDiscordSettingsTop",
+          children: [
+            React.createElement(Button.default, {
+              children: "Open Folder",
+              onClick: () => shell.openPath(DrApi.Plugins.folder)
+            }),
+            React.createElement("div", {
+              children: [
+                React.createElement(TextInput, {
+                  placeholder: "URL",
+                  value: this.state.url,
+                  onChange: (val) => this.setState({ url: val })
+                }),
+                React.createElement(Button.default, {
+                  children: "Install",
+                  onClick: () => {
+                    const FileName = this.state.url.split('/').pop().split('#')[0].split('?')[0]
+                    if (!(!FileName.endsWith(".js"))) return 
+                    DrApi.request(this.state.url, (err, _, body) => {
+                      if (err) throw new Error("Failed to install plugin")
+                      _fs.writeFileSync(_path.join(DrApi.Plugins.folder, FileName), body, "utf8")
+                      this.setState({ url: "" })
+                    })
+                  }
+                })
+              ]
+            })
+          ]
+        }),
+        React.createElement("div", {
+          className: "DrDiscordSettingsAddons",
+          children: [
+            DrApi.Plugins.getAll().map(theme => React.createElement(Card, {
+              ...theme, type: "Plugins",
+            }))
+          ]
+        })
+      ]
     })
   }
 }
