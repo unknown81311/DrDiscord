@@ -106,6 +106,7 @@ else { console.error("No preload path found!") }
         styling: {
           insert: (name, css, sass = false) => stylingApi.inject(name, css, sass),
           remove: (name) => stylingApi.uninject(name),
+          update: (name, css, sass = false) => stylingApi.update(name, css, sass),
           compileSass: (options) => stylingApi.sass(options)
         },
         modal: {
@@ -357,7 +358,7 @@ else { console.error("No preload path found!") }
       ele.forceUpdate()
       //
       const SettingsModal = require("./ui/SettingsModal")
-      const openSettings = (page) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page }))
+      const openSettings = (page, reactElement) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page, reactElement }))
       // Load CC
       DrApi.request("https://raw.githubusercontent.com/Cumcord/Cumcord/stable/dist/build.js", (err, _, body) => {
         if (err) logger.error(err)

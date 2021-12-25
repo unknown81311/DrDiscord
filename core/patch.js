@@ -7,7 +7,7 @@ function patch(name, module, funcName, callback, opts = {}) {
   if (!module) throw new Error("Module is required")
   if (!funcName) throw new Error("FuncName is required")
   if (!callback) throw new Error("Callback is required")
-
+  if (!module[funcName]) throw new Error("Function doesnt exist in Module")
   const { type = "after" } = opts
   
   const original = module[funcName]
@@ -32,9 +32,12 @@ function patch(name, module, funcName, callback, opts = {}) {
   if (Object.keys(original).length) 
     for (const key of Object.keys(original)) 
       module[funcName][key] = original[key]
-
+  
   const position = module[funcName].__patches.push([module, funcName, callback, type]) - 1
+  let didUnpatch = false
   function unpatch() {
+    if (didUnpatch) return
+    didUnpatch = true
     delete patches[name]
     module[funcName] = module[funcName].__originalFunction
     module[funcName].__patches.splice(position, 1)

@@ -26,7 +26,9 @@ const CustomCSS = require("./CustomCSS")
 
 const settings = DataStore("DR_DISCORD_SETTINGS")
 
-const Card = React.memo(({ meta, type }) => {
+const Card = React.memo((props) => {
+  const { meta, type } = props
+
   const [enabled, setEnabled] = React.useState(DrApi[type].isEnabled(meta.name))
   return React.createElement("div", {
     className: "DrDiscord-card",
@@ -69,6 +71,18 @@ const Card = React.memo(({ meta, type }) => {
         children: React.createElement("div", {
           className: "DrDiscord-card-footer",
           children: [
+            React.createElement("div", {
+              className: "DrDiscord-card-footer-left",
+              children: [
+                (typeof props.plugin.onSettings === "function" && enabled) ? React.createElement("div", {
+                  className: "DrDiscord-card-footer-left-settings",
+                  onClick: () => props.setContent(props.plugin.onSettings())
+                }, React.createElement(Tooltip, {
+                  text: "Settings",
+                  children: (ttProps) => React.createElement(Gear, ttProps)
+                })) : null
+              ]
+            }),
             React.createElement("div", {
               className: "DrDiscord-card-footer-switch",
               children: React.createElement(Switch, {
@@ -259,10 +273,13 @@ const DrSettings = React.memo(({
   })
 })
 
-const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
+const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc }, setContent }) => {
   return React.createElement(TabBar, {
     selectedItem: page,
-    onItemSelect: setPage,
+    onItemSelect: (e) => {
+      setPage(e)
+      setContent(null)
+    },
     itemType: TabBar.Types.TOP_PILL,
     className: ["DrDiscordSettingsTabBar", (tbc === 1) ? "IconsOnly" : null ].join(" "),
     children: [
@@ -304,12 +321,14 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc } }) => {
     ]
   })
 })
+
 class Themes extends React.Component {
   constructor(props) {
     super(props)
     this.state = { url: "" }
   }
   render() {
+    const Themes = DrApi.Themes.getAll()
     return React.createElement("div", {
       children: [
         React.createElement("div", {
@@ -345,7 +364,7 @@ class Themes extends React.Component {
         React.createElement("div", {
           className: "DrDiscordSettingsAddons",
           children: [
-            DrApi.Themes.getAll().map(theme => React.createElement(Card, {
+            Themes.map(theme => React.createElement(Card, {
               ...theme, type: "Themes",
             }))
           ]
@@ -360,6 +379,7 @@ class Plugins extends React.Component {
     this.state = { url: "" }
   }
   render() {
+    const Plugins = DrApi.Plugins.getAll()
     return React.createElement("div", {
       children: [
         React.createElement("div", {
@@ -395,8 +415,8 @@ class Plugins extends React.Component {
         React.createElement("div", {
           className: "DrDiscordSettingsAddons",
           children: [
-            DrApi.Plugins.getAll().map(theme => React.createElement(Card, {
-              ...theme, type: "Plugins",
+            Plugins.map(theme => React.createElement(Card, {
+              ...theme, type: "Plugins", setContent: this.props.setContent
             }))
           ]
         })
@@ -404,10 +424,11 @@ class Plugins extends React.Component {
     })
   }
 }
-module.exports = React.memo(({mProps, PAGE}) => {
+module.exports = React.memo(({mProps, PAGE, reactElement}) => {
   const [pi, setPI] = React.useState(settings.PageItem || 0)
   const [page, setPage] = React.useState(PAGE || 0)
   const [tbc, setTBC] = React.useState(settings.TabBarContent === 0 ? 0 : settings.TabBarContent)
+  const [content, setContent] = React.useState(reactElement)
   
   return React.createElement(ModalElements.ModalRoot, {
     ...mProps,
@@ -438,7 +459,7 @@ module.exports = React.memo(({mProps, PAGE}) => {
                   })
                 ]
               }),
-              pi === 1 ? React.createElement(Tabs, { page, setPage, TabBarContent: { tbc } }) : null,
+              pi === 1 ? React.createElement(Tabs, { page, setPage, TabBarContent: { tbc }, setContent }) : null,
               React.createElement(FlexChild, {
                 children: React.createElement(ModalElements.ModalCloseButton, {
                   onClick: mProps.onClose
@@ -451,10 +472,10 @@ module.exports = React.memo(({mProps, PAGE}) => {
       React.createElement(ModalElements.ModalContent, {
         dataPage: page,
         children: [
-          page === 0 ? React.createElement(DrSettings, {
+          !content ? page === 0 ? React.createElement(DrSettings, {
             PageItem: { pi, setPI },
             TabBarContent: { tbc, setTBC }
-          }) : page === 1 ? React.createElement(Plugins) : page === 2 ? React.createElement(Themes) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : null,
+          }) : page === 1 ? React.createElement(Plugins, { setContent }) : page === 2 ? React.createElement(Themes) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : null : content,
         ]
       })
     ]
