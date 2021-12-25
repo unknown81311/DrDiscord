@@ -74,7 +74,7 @@ const Card = React.memo((props) => {
             React.createElement("div", {
               className: "DrDiscord-card-footer-left",
               children: [
-                (typeof props.plugin.onSettings === "function" && enabled) ? React.createElement("div", {
+                !props.plugin ? null : (typeof props.plugin.onSettings === "function" && enabled) ? React.createElement("div", {
                   className: "DrDiscord-card-footer-left-settings",
                   onClick: () => props.setContent(props.plugin.onSettings())
                 }, React.createElement(Tooltip, {

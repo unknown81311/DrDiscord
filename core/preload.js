@@ -274,8 +274,7 @@ else { console.error("No preload path found!") }
       toWindow("DrApi", DrApi)
       const {
         React, modal: {
-          functions: { openModal },
-          elements
+          functions: { openModal }
         }
       } = DrApi
       // Add react stuff
@@ -289,31 +288,29 @@ else { console.error("No preload path found!") }
       await waitFor(".guilds-1SWlCJ")
       //
       const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
-      const TextInput = DrApi.find("TextInput").default
       patch("DrDiscordInternal-CodeBlock-Patch", codeBlock, "react", ([props], origRes) => {
         if (props.type !== "codeBlock") return 
-        if (props.lang === "plugin") {
-          patch.quick(origRes.props, "render", ([renderProps], res) => {
-            renderProps.hasLanguage("js")
+        if (props.content.startsWith("/**")) {
+          if (props.content.includes("BdApi")) return 
+          patch.quick(origRes.props, "render", (_, res) => {
             if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
+            let meta = {}
+            let jsdoc = props.content.match(/\/\*\*([\s\S]*?)\*\//)[1]
+            for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
+              ite = ite.replace("* @", "")
+              let split = ite.split(" ")
+              let key = split[0]
+              let value = split.slice(1).join(" ")
+              meta[key] = value
+            }
             res.props.children.push(React.createElement("button", {
               className: "dr-discord-codeblock-add-plugin",
-              children: "Add Plugin",
+              children: `Install ${meta.name}`,
               onClick: () => {
                 let nameVal = ""
                 DrApi.showConfirmationModal("Install Plugin", [
-                  "Whats this plugins name?",
-                  React.createElement((() => React.memo(() => {
-                    const [name, setName] = React.useState(nameVal)
-                    return React.createElement(TextInput, {
-                      value: name,
-                      onInput: e => {
-                        setName(e.target.value)
-                        nameVal = e.target.value
-                      },
-                      placeholder: "Plugin Name"
-                    })
-                  }))())
+                  `Are you sure you want to install ${meta.name}?`,
+                  props.content.includes("BdApi") ? "This could be a BetterDiscord plugin since it contians `BdApi" : null,
                 ], {
                   confirmText: "Install",
                   onConfirm: () => {

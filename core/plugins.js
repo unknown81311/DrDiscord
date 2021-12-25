@@ -9,15 +9,25 @@ if (!DrDiscord.enabledPlugins) DrDiscord.enabledPlugins = {}
 const _dir = _path.join(__dirname, "..", "plugins")
 const plugins = []
 
+if (!_fs.existsSync(_dir)) _fs.mkdirSync(_dir)
+
 _fs.readdir(_dir, (err, files) => {
   if (err) throw new Error(`Error reading '${_dir}'`)
   files = files.filter(file => file.endsWith(".js"))
   for (const file of files) {
-    const { plugin, meta } = require(_path.join(_dir, file))
+    const path = _path.join(_dir, file)
+    let meta = {}
+    let jsdoc = _fs.readFileSync(path, "utf8").match(/\/\*\*([\s\S]*?)\*\//)[1]
+    for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
+      ite = ite.replace("* @", "")
+      let split = ite.split(" ")
+      let key = split[0]
+      let value = split.slice(1).join(" ")
+      meta[key] = value
+    }
+    const plugin = require(path)
     plugins.push({ plugin, meta })
-
     if (plugin.onLoad) plugin.onLoad()
-
     if (DrDiscord.enabledPlugins[meta.name]) plugin.onStart()
   }
 })

@@ -8,6 +8,9 @@ const DrDiscord = DataStore("DR_DISCORD_SETTINGS")
 if (!DrDiscord.enabledThemes) DrDiscord.enabledThemes = {}
 
 const _dir = _path.join(__dirname, "..", "themes")
+
+if (!_fs.existsSync(_dir)) _fs.mkdirSync(_dir)
+
 const themes = []
 
 _fs.readdir(_dir, (err, files) => {
@@ -16,13 +19,24 @@ _fs.readdir(_dir, (err, files) => {
   for (const file of files) {
     _fs.readFile(_path.join(_dir, file), "utf8", (err, data) => {
       if (err) throw new Error(`Error reading '${_path.join(_dir, file)}'`)
-      let meta = JSON.parse(data.split("\n")[0].replace("/*", "").replace("*/", ""))
+      let meta = {}
+      let jsdoc = data.match(/\/\*\*([\s\S]*?)\*\//)[1]
+      for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
+        ite = ite.replace("* @", "")
+        let split = ite.split(" ")
+        let key = split[0]
+        let value = split.slice(1).join(" ")
+        meta[key] = value
+      }
       if (file.endsWith(".scss")) {
         meta.scss = true
         meta.css = renderSync({ data }).css.toString()
       }
-      else meta.css = data
-      themes.push({ meta })
+      else {
+        meta.scss = false
+        meta.css = data
+      }
+      themes.push({ meta, theme: data })
       if (DrDiscord.enabledThemes[meta.name]) document.querySelector("drdiscord").appendChild(Object.assign(document.createElement("style"), {
         innerHTML: meta.css,
         id: `drdiscord-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`
