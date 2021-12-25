@@ -326,7 +326,7 @@ else { console.error("No preload path found!") }
             if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
             res.props.children.push(React.createElement("button", {
               className: "dr-discord-codeblock-copy-button",
-              children: "Add to custom CSS",
+              children: "Add to custom SCSS",
               onClick: () => {
                 let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
                 let css
