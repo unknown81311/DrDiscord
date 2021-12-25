@@ -314,7 +314,7 @@ else { console.error("No preload path found!") }
                 ], {
                   confirmText: "Install",
                   onConfirm: () => {
-                    _fs.writeFileSync(_path.join(DrApi.Plugins.folder, `${nameVal}.js`), props.content, "utf8")
+                    _fs.writeFileSync(_path.join(DrApi.Plugins.folder, `${meta.name}.js`), props.content, "utf8")
                   }
                 })
               }

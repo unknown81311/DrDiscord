@@ -329,6 +329,7 @@ class Themes extends React.Component {
   }
   render() {
     const Themes = DrApi.Themes.getAll()
+    if (Themes.length === 0) return "No themes found"
     return React.createElement("div", {
       children: [
         React.createElement("div", {
@@ -380,6 +381,7 @@ class Plugins extends React.Component {
   }
   render() {
     const Plugins = DrApi.Plugins.getAll()
+    if (Plugins.length === 0) return "No themes found"
     return React.createElement("div", {
       children: [
         React.createElement("div", {
@@ -437,7 +439,7 @@ module.exports = React.memo(({mProps, PAGE, reactElement}) => {
     children: [
       (pi === 0) ? React.createElement("div", {
         className: "DrDiscordSettingsTabBarWrapper",
-        children: React.createElement(Tabs, { page, setPage, TabBarContent: { tbc } })
+        children: React.createElement(Tabs, { page, setPage, TabBarContent: { tbc }, setContent })
       }) : null,
       React.createElement(ModalElements.ModalHeader, {
         separator: false,
