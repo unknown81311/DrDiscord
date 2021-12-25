@@ -286,35 +286,35 @@ const Tabs = React.memo(({ page, setPage, TabBarContent: { tbc }, setContent }) 
       React.createElement(TabBar.Item, {
         children: [
           (tbc <= 1) ? React.createElement(Gear) : null,
-          (tbc === 0 || tbc === 2) ? "Settings" : null
+          (tbc === 0 || tbc === 2) ? React.createElement("span", null, "Settings") : null
         ],
         id: 0,
       }),
       React.createElement(TabBar.Item, {
         children: [
           (tbc <= 1) ? React.createElement(Icons.Plugins) : null,
-          (tbc === 0 || tbc === 2) ? "Plugins" : null
+          (tbc === 0 || tbc === 2) ? React.createElement("span", null, "Plugins") : null
         ],
         id: 1,
       }),
       React.createElement(TabBar.Item, {
         children: [
           (tbc <= 1) ? React.createElement(Icons.Themes) : null,
-          (tbc === 0 || tbc === 2) ? "Themes" : null
+          (tbc === 0 || tbc === 2) ? React.createElement("span", null, "Themes") : null
         ],
         id: 2,
       }),
       React.createElement(TabBar.Item, {
         children: [
           (tbc <= 1) ? React.createElement(Icons.CustomCSS) : null,
-          (tbc === 0 || tbc === 2) ? "Custom CSS" : null
+          (tbc === 0 || tbc === 2) ? React.createElement("span", null, "Custom CSS") : null
         ],
         id: 3,
       }),
       React.createElement(TabBar.Item, {
         children: [
           (tbc <= 1) ? React.createElement(Icons.Updater) : null,
-          (tbc === 0 || tbc === 2) ? "Updater" : null
+          (tbc === 0 || tbc === 2) ? React.createElement("span", null, "Updater") : null
         ],
         id: 4,
       })
@@ -329,7 +329,6 @@ class Themes extends React.Component {
   }
   render() {
     const Themes = DrApi.Themes.getAll()
-    if (Themes.length === 0) return "No themes found"
     return React.createElement("div", {
       children: [
         React.createElement("div", {
@@ -381,7 +380,6 @@ class Plugins extends React.Component {
   }
   render() {
     const Plugins = DrApi.Plugins.getAll()
-    if (Plugins.length === 0) return "No themes found"
     return React.createElement("div", {
       children: [
         React.createElement("div", {

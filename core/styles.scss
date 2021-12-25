@@ -14,16 +14,14 @@
     padding: 0;
     flex: unset;
     flex-direction: row;
-    &.IconsOnly {
-      svg {
-        margin-right: unset !important;
-      }
-    }
     .item-PXvHYJ {
       border-radius: 4px;
       margin: 1px 5px;
       padding: 2px 8px;
       svg {
+        &:only-child {
+          margin-right: unset !important;
+        }
         width: 16px;
         height: 16px;
         margin-right: 4px;
