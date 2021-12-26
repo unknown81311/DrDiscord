@@ -13,10 +13,15 @@ process.env.DRDISCORD_DIR = __dirname
 
 class BrowserWindow extends electron.BrowserWindow {
   constructor(opt) {
-    if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title || process.argv.includes("--vanilla")) return super(opt)
+    if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title) return super(opt)
     const originalPreload = opt.webPreferences.preload
     process.env.DISCORD_PRELOAD = originalPreload
     
+    if (process.argv.includes("--vanilla")) {
+      opt.webPreferences.preload = join(__dirname, "preload.js")
+      return super(opt)
+    }
+
     opt = Object.assign(opt, {
       webPreferences: {
         contextIsolation: false,
@@ -45,9 +50,9 @@ ipcMain.handle("RESTART_DISCORD", () => {
   electron.app.relaunch()
   electron.app.quit()
 })
-ipcMain.on("POPOUT_WINDOW", (_, opts) => {
+ipcMain.on("POPOUT_WINDOW", (event, opts) => {
   const window = new electron.BrowserWindow(opts)
-  return window
+  event.returnValue = window
 })
 
 electron.app.once("ready", () => {
