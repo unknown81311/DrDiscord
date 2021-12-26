@@ -16,11 +16,6 @@ class BrowserWindow extends electron.BrowserWindow {
     if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title) return super(opt)
     const originalPreload = opt.webPreferences.preload
     process.env.DISCORD_PRELOAD = originalPreload
-    
-    if (process.argv.includes("--vanilla")) {
-      opt.webPreferences.preload = join(__dirname, "preload.js")
-      return super(opt)
-    }
 
     opt = Object.assign(opt, {
       webPreferences: {
@@ -36,11 +31,24 @@ class BrowserWindow extends electron.BrowserWindow {
         backgroundColor: "#00000000",
       })
     }
+
+    if (process.argv.includes("--vanilla")) {
+      opt.webPreferences.preload = originalPreload
+    }
+
     super(opt)
   }
 }
 
-if (process.argv.includes("--vanilla")) return
+function LoadDiscord() {
+  const basePath = join(process.resourcesPath, "app.asar")
+  const pkg = require(join(basePath, "package.json"))
+  electron.app.setAppPath(basePath)
+  electron.app.name = pkg.name
+  Module._load(join(basePath, pkg.main), null, true)
+}
+
+if (process.argv.includes("--vanilla")) return LoadDiscord()
 
 ipcMain.handle("COMPILE_SASS", (_, sass) => {
   try { return _sass.renderSync({ data: sass }).css.toString() } 
@@ -50,9 +58,10 @@ ipcMain.handle("RESTART_DISCORD", () => {
   electron.app.relaunch()
   electron.app.quit()
 })
-ipcMain.on("POPOUT_WINDOW", (event, opts) => {
-  const window = new electron.BrowserWindow(opts)
-  event.returnValue = window
+ipcMain.on("POPOUT_WINDOW", (event, { Opts, Url = "https://discord.com/login"}) => {
+  const window = new BrowserWindow(Opts)
+  window.loadURL(Url)
+  event.returnValue = null
 })
 
 electron.app.once("ready", () => {
@@ -73,8 +82,4 @@ const electronPath = require.resolve("electron")
 delete require.cache[electronPath].exports
 require.cache[electronPath].exports = Electron
 
-const basePath = join(process.resourcesPath, "app.asar")
-const pkg = require(join(basePath, "package.json"))
-electron.app.setAppPath(basePath)
-electron.app.name = pkg.name
-Module._load(join(basePath, pkg.main), null, true)
+LoadDiscord()
