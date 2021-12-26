@@ -286,12 +286,13 @@ else { console.error("No preload path found!") }
       }
       // 
       await waitFor(".guilds-1SWlCJ")
+      // Add plugin language
+      DrApi.find(["registerLanguage"]).registerLanguage("plugin", DrApi.find(m => m.name === "" && m.toString().startsWith("function(e){const o=t")))
       //
       const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
       patch("DrDiscordInternal-CodeBlock-Patch", codeBlock, "react", ([props], origRes) => {
         if (props.type !== "codeBlock") return 
-        if (props.content.startsWith("/**")) {
-          if (props.content.includes("BdApi")) return 
+        if (props.content.startsWith("/**") && props.lang === "plugin") {
           patch.quick(origRes.props, "render", (_, res) => {
             if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
             let meta = {}
@@ -307,7 +308,6 @@ else { console.error("No preload path found!") }
               className: "dr-discord-codeblock-add-plugin",
               children: `Install ${meta.name}`,
               onClick: () => {
-                let nameVal = ""
                 DrApi.showConfirmationModal("Install Plugin", [
                   `Are you sure you want to install ${meta.name}?`,
                   props.content.includes("BdApi") ? "This could be a BetterDiscord plugin since it contians `BdApi" : null,

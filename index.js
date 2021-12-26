@@ -13,7 +13,7 @@ process.env.DRDISCORD_DIR = __dirname
 
 class BrowserWindow extends electron.BrowserWindow {
   constructor(opt) {
-    if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title) return super(opt)
+    if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title || process.argv.includes("--vanilla")) return super(opt)
     const originalPreload = opt.webPreferences.preload
     process.env.DISCORD_PRELOAD = originalPreload
     
@@ -35,6 +35,8 @@ class BrowserWindow extends electron.BrowserWindow {
   }
 }
 
+if (process.argv.includes("--vanilla")) return
+
 ipcMain.handle("COMPILE_SASS", (_, sass) => {
   try { return _sass.renderSync({ data: sass }).css.toString() } 
   catch (e) { return e.message }
@@ -43,7 +45,10 @@ ipcMain.handle("RESTART_DISCORD", () => {
   electron.app.relaunch()
   electron.app.quit()
 })
-
+ipcMain.on("POPOUT_WINDOW", (_, opts) => {
+  const window = new electron.BrowserWindow(opts)
+  return window
+})
 
 electron.app.once("ready", () => {
   electron.session.defaultSession.webRequest.onHeadersReceived(function({ responseHeaders }, callback) {

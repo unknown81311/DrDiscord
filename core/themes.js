@@ -17,8 +17,9 @@ _fs.readdir(_dir, (err, files) => {
   if (err) throw new Error(`Error reading '${_dir}'`)
   files = files.filter(file => file.endsWith(".css") || file.endsWith(".scss"))
   for (const file of files) {
-    _fs.readFile(_path.join(_dir, file), "utf8", (err, data) => {
-      if (err) throw new Error(`Error reading '${_path.join(_dir, file)}'`)
+    const path = _path.join(_dir, file)
+    _fs.readFile(path, "utf8", (err, data) => {
+      if (err) throw new Error(`Error reading '${path}'`)
       let meta = {}
       let jsdoc = data.match(/\/\*\*([\s\S]*?)\*\//)[1]
       for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
@@ -36,6 +37,7 @@ _fs.readdir(_dir, (err, files) => {
         meta.scss = false
         meta.css = data
       }
+      meta.file = path
       themes.push({ meta, theme: data })
       if (DrDiscord.enabledThemes[meta.name]) document.querySelector("drdiscord").appendChild(Object.assign(document.createElement("style"), {
         innerHTML: meta.css,
