@@ -15,6 +15,12 @@ class BrowserWindow extends electron.BrowserWindow {
   constructor(opt) {
     if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title) return super(opt)
     const originalPreload = opt.webPreferences.preload
+
+    if (process.argv.includes("--vanilla")) {
+      opt.webPreferences.preload = originalPreload
+      return super(opt)
+    }
+
     process.env.DISCORD_PRELOAD = originalPreload
 
     opt = Object.assign(opt, {
@@ -31,11 +37,6 @@ class BrowserWindow extends electron.BrowserWindow {
         backgroundColor: "#00000000",
       })
     }
-
-    if (process.argv.includes("--vanilla")) {
-      opt.webPreferences.preload = originalPreload
-    }
-
     super(opt)
   }
 }
@@ -50,18 +51,15 @@ function LoadDiscord() {
 
 if (process.argv.includes("--vanilla")) return LoadDiscord()
 
-ipcMain.handle("COMPILE_SASS", (_, sass) => {
-  try { return _sass.renderSync({ data: sass }).css.toString() } 
-  catch (e) { return e.message }
+ipcMain.on("COMPILE_SASS", (event, sass) => {
+  let toReturn
+  try { toReturn =  _sass.renderSync({ data: sass }).css.toString() } 
+  catch (e) { toReturn = e.message }
+  event.returnValue = toReturn
 })
 ipcMain.handle("RESTART_DISCORD", () => {
   electron.app.relaunch()
   electron.app.quit()
-})
-ipcMain.on("POPOUT_WINDOW", (event, { Opts, Url = "https://discord.com/login"}) => {
-  const window = new BrowserWindow(Opts)
-  window.loadURL(Url)
-  event.returnValue = null
 })
 
 electron.app.once("ready", () => {

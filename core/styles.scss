@@ -42,6 +42,10 @@
   }
 }
 //
+.DrDiscordSettingsModal {
+  min-width: 800px;
+  max-width: 800px;
+}
 .DrDiscordSettingsModal .content-1LAB8Z {
   &[datapage="3"] {
     padding: 0 !important;
@@ -59,6 +63,9 @@
 //
 .markup-2BOw-j pre {
   position: relative;
+  & > code:not(:only-child) {
+    padding-bottom: 29px;
+  }
   .dr-discord-codeblock-copy-button, .dr-discord-codeblock-add-plugin {
     position: absolute;
     bottom: 0;
@@ -254,4 +261,8 @@
       display: flex
     }
   }
+}
+//@at-root
+.Dr-Badge [d] {
+  color: var(--text-normal)
 }

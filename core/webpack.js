@@ -120,9 +120,15 @@ else {
           toReturn = cs
       return toReturn
     },
-    webpackExports
+    webpackExports,
+    ByName: (name) => {
+      return global.DrApi.find.all(m => {
+        if (!m) return
+        if (typeof name === "string") name = name.toLowerCase()
+        return Object.keys(m).some(n => n && n.toLowerCase().search(name) > -1)
+      })
+    },
   })
-
   webpackChunkdiscord_app.DRAPI_FIND = find
   module.exports = find
 }
