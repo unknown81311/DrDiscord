@@ -61,6 +61,11 @@ ipcMain.handle("RESTART_DISCORD", () => {
   electron.app.relaunch()
   electron.app.quit()
 })
+ipcMain.on("POPOUT_WINDOW", (event, { Opts = {}, Url = "https://discord.com/login"}) => {
+  const win = new BrowserWindow(Opts)
+  win.loadURL(Url)
+  event.returnValue = null
+})
 
 electron.app.once("ready", () => {
   electron.session.defaultSession.webRequest.onHeadersReceived(function({ responseHeaders }, callback) {
