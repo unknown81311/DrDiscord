@@ -11,7 +11,7 @@ require.extensions[".jsx"] = (module, filename) => {
   const jsx = _fs.readFileSync(filename, "utf8");
   const compiled = sucrase.transform(jsx, {
     transforms: ["jsx"],
-    filePath: file,
+    filePath: filename,
     production: true
   }).code
   module._compile(compiled, filename)
