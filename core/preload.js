@@ -7,15 +7,19 @@ const { exec } = require("child_process")
 const request = require("request")
 const sucrase = require("sucrase")
 
-require.extensions[".jsx"] = (module, filename) => {
+function Compiler(module, filename) {
   const jsx = _fs.readFileSync(filename, "utf8");
   const compiled = sucrase.transform(jsx, {
-    transforms: ["jsx"],
+    transforms: ["jsx", "imports", "typescript"],
     filePath: filename,
     production: true
   }).code
   module._compile(compiled, filename)
 }
+
+require.extensions[".jsx"] = Compiler
+require.extensions[".ts"] = Compiler
+require.extensions[".tsx"] = Compiler
 
 const DataStore = require("./datastore")
 
