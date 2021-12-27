@@ -5,6 +5,17 @@ const _fs = require("fs")
 const logger = require("./logger")
 const { exec } = require("child_process")
 const request = require("request")
+const sucrase = require("sucrase")
+
+require.extensions[".jsx"] = (module, filename) => {
+  const jsx = _fs.readFileSync(filename, "utf8");
+  const compiled = sucrase.transform(jsx, {
+    transforms: ["jsx"],
+    filePath: file,
+    production: true
+  }).code
+  module._compile(compiled, filename)
+}
 
 const DataStore = require("./datastore")
 

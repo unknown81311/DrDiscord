@@ -253,7 +253,8 @@
         }
       }
       &-wrapper {
-        padding: 6px
+        padding: 6px;
+        height: 26px;
       }
       &-switch {
         margin-left: auto
@@ -262,7 +263,7 @@
     }
   }
 }
-//@at-root
+// Badges
 .Dr-Badge [d] {
   color: var(--text-normal)
 }

@@ -121,7 +121,7 @@ else {
       return toReturn
     },
     webpackExports,
-    ByName: (name) => {
+    byName: (name) => {
       return global.DrApi.find.all(m => {
         if (!m) return
         if (typeof name === "string") name = name.toLowerCase()
