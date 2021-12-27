@@ -53,9 +53,27 @@ const Plugins = new class {
     plugin.onStop()
   }
   toggle(name) { return this.isEnabled(name) ? this.disable(name) : this.enable(name) }
+  getByFileName(name) {
+    const all = getAll();
+    const done=false
+    for (var i = 0; (i < all.length && !done); i++) {
+	    const plug=all[i].meta.file.split('\\');
+      if(plug[plug.length-1]==name)done==true;
+    }
+    return(get(all[i].meta.name)||undefined);
+  }
 }
 
+const watcher=require('fs').watch(_dir,{},(_,f)=>{
+  const plug=Plugins.getByFileName(f)
+  if(Plugins.isEnabled(plug)){
+    Plugins.disable(plug)
+    Plugins.enable(plug)
+  }
+})
+
 module.exports = {
+  getByFileName:(name)=>Plugins.getByFileName(name),
   get: (name) => Plugins.get(name),
   getAll: () => Plugins.getAll(),
   getEnabled: () => Plugins.getEnabled(),
