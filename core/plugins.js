@@ -17,7 +17,9 @@ _fs.readdir(_dir, (err, files) => {
   for (const file of files) {
     const path = _path.join(_dir, file)
     let meta = {}
-    let jsdoc = _fs.readFileSync(path, "utf8").match(/\/\*\*([\s\S]*?)\*\//)[1]
+    let _jsdoc = _fs.readFileSync(path, "utf8")
+    let jsdoc=_jsdoc.match(/\/\*\*([\s\S]*?)\*\//)[1]
+    console.log(jsdoc);
     for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
       ite = ite.replace("* @", "")
       let split = ite.split(" ")
@@ -53,9 +55,27 @@ const Plugins = new class {
     plugin.onStop()
   }
   toggle(name) { return this.isEnabled(name) ? this.disable(name) : this.enable(name) }
+  getByFileName(name) {
+    const all = Plugins.getAll();//getAll not defined?
+    const done=false
+    for (var i = 0; (i < all.length && !done); i++) {
+      const plug=all[i].meta.file.split('\\');
+      if(plug[plug.length-1]==name)done==true;
+    }
+    return(Plugins.get(all[i-1].meta.name)||undefined);
+  }
 }
 
+const watcher=require('fs').watch(_dir,{},(_,f)=>{
+  const plug=Plugins.getByFileName(f)
+  if(Plugins.isEnabled(plug)){
+    Plugins.disable(plug)
+    Plugins.enable(plug)
+  }
+})
+
 module.exports = {
+  getByFileName:(name)=>Plugins.getByFileName(name),
   get: (name) => Plugins.get(name),
   getAll: () => Plugins.getAll(),
   getEnabled: () => Plugins.getEnabled(),
