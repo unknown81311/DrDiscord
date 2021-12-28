@@ -1,4 +1,4 @@
-const {
+const {/* Look at 470 for the icon that I cnat fix and look at 94 for the weird eval shit*/
   info
 } = require("../../package.json")
 const DataStore = require("../datastore")
@@ -100,15 +100,15 @@ class CustomJS extends React.Component {
               confirmText: "yes, im sure",
               onConfirm: () => {
                 try {
-                  eval(DrApi.DataStore("DR_DISCORD_SETTINGS")._JS)
+                  require("module").prototype._compile(DrApi.DataStore("DR_DISCORD_SETTINGS")._JS,'CustomJS')
                 } catch (e) {
-                  DrApi.showConfirmationModal('Custom JS Error:', [String(e)])
+                  DrApi.showConfirmationModal('Custom JS Error:', [String(e)],{cancelText:null})
                 }
               }
             })
           } else {
             try {
-              eval(DrApi.DataStore("DR_DISCORD_SETTINGS")._JS)
+              require("module").prototype._compile(DrApi.DataStore("DR_DISCORD_SETTINGS")._JS,'CustomJS')
             } catch (e) {
               DrApi.showConfirmationModal('Custom JS Error:', [String(e)],{cancelText:null})
             }
