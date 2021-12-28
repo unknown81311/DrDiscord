@@ -110,7 +110,7 @@ class CustomJS extends React.Component {
             try {
               eval(DrApi.DataStore("DR_DISCORD_SETTINGS")._JS)
             } catch (e) {
-              DrApi.showConfirmationModal('Custom JS Error:', [String(e)])
+              DrApi.showConfirmationModal('Custom JS Error:', [String(e)],{cancelText:null})
             }
           }
         },
