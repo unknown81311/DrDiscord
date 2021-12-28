@@ -15,8 +15,14 @@ class BrowserWindow extends electron.BrowserWindow {
   constructor(opt) {
     if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title) return super(opt)
     const originalPreload = opt.webPreferences.preload
+
+    if (process.argv.includes("--vanilla")) {
+      opt.webPreferences.preload = originalPreload
+      return super(opt)
+    }
+
     process.env.DISCORD_PRELOAD = originalPreload
-    
+
     opt = Object.assign(opt, {
       webPreferences: {
         contextIsolation: false,
@@ -35,15 +41,31 @@ class BrowserWindow extends electron.BrowserWindow {
   }
 }
 
-ipcMain.handle("COMPILE_SASS", (_, sass) => {
-  try { return _sass.renderSync({ data: sass }).css.toString() } 
-  catch (e) { return e.message }
+function LoadDiscord() {
+  const basePath = join(process.resourcesPath, "app.asar")
+  const pkg = require(join(basePath, "package.json"))
+  electron.app.setAppPath(basePath)
+  electron.app.name = pkg.name
+  Module._load(join(basePath, pkg.main), null, true)
+}
+
+if (process.argv.includes("--vanilla")) return LoadDiscord()
+
+ipcMain.on("COMPILE_SASS", (event, sass) => {
+  let toReturn
+  try { toReturn =  _sass.renderSync({ data: sass }).css.toString() } 
+  catch (e) { toReturn = e.message }
+  event.returnValue = toReturn
 })
 ipcMain.handle("RESTART_DISCORD", () => {
   electron.app.relaunch()
-  process.platform === "darwin" ? electron.app.quit() : electron.app.exit()
+  electron.app.quit()
 })
-
+ipcMain.on("POPOUT_WINDOW", (event, { Opts = {}, Url = "https://discord.com/login"}) => {
+  const win = new BrowserWindow(Opts)
+  win.loadURL(Url)
+  event.returnValue = null
+})
 
 electron.app.once("ready", () => {
   electron.session.defaultSession.webRequest.onHeadersReceived(function({ responseHeaders }, callback) {
@@ -63,8 +85,4 @@ const electronPath = require.resolve("electron")
 delete require.cache[electronPath].exports
 require.cache[electronPath].exports = Electron
 
-const basePath = join(process.resourcesPath, "app.asar")
-const pkg = require(join(basePath, "package.json"))
-electron.app.setAppPath(basePath)
-electron.app.name = pkg.name
-Module._load(join(basePath, pkg.main), null, true)
+LoadDiscord()

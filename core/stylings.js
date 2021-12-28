@@ -48,6 +48,11 @@ class stylingApi {
     this.styles[name].element.remove()
     delete this.styles[name]
   }
+  update(name, css, sass = false) {
+    if (!this.styles[name]) return
+    this.styles[name].element.innerText = css
+    if (sass) this.styles[name].element.innerText = this.sass({ data: css })
+  }
   /**
    * @name sass
    * @description compiles sass to css.

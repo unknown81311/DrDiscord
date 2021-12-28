@@ -18,6 +18,8 @@ class DataStore {
   getData(name, key) {
     try {
       const data = this.getAllData(name)
+      if (data[key] === "") return ""
+      if (data[key] === 0) return 0
       if (data[key]) return data[key]
       else return null
     } 
@@ -28,7 +30,7 @@ class DataStore {
       const file = this.getFile(name)
       const data = this.getAllData(name)
       data[key] = value
-      _fs.writeFileSync(file, JSON.stringify(data))
+      _fs.writeFileSync(file, JSON.stringify(data, null, 2))
     } 
     catch (error) { Logger.error("DrDiscord", error) }
   }

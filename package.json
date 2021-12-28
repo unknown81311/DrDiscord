@@ -6,13 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "node ./installation.js --install",
-    "uninstall": "node ./installation.js --uninstall"
+    "uninstall": "node ./installation.js --uninstall",
+    "update": "npm i && git stash && git pull"
   },
   "author": "Doggybootsy",
   "license": "ISC",
   "dependencies": {
-    "esbuild": "^0.14.2",
-    "sass": "^1.44.0"
+    "sass": "^1.44.0",
+    "sucrase": "^3.20.3"
   },
   "devDependencies": {
     "electron-devtools-installer": "^3.2.0"
@@ -20,6 +21,6 @@
   "info": {
     "name": "Discord Re-envisioned",
     "nameShort": "DrDiscord",
-    "version": "1.0.0"
+    "version": "1.0.2"
   }
 }
