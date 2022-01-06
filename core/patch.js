@@ -15,7 +15,7 @@ function patch(name, module, funcName, callback, opts = {}) {
   if (!module[funcName].__originalFunction) module[funcName].__originalFunction = original
   if (!module[funcName].__patches) module[funcName].__patches = []
 
-  if (type === "after") module[funcName] = function() {
+  if (original.apply && type === "after") module[funcName] = function() {
     const result = original.apply(this, arguments)
     callback.apply(this, [[...arguments], result, this])
     return result
