@@ -55,7 +55,7 @@ const Plugins = new class {
   }
   toggle(name) { return this.isEnabled(name) ? this.disable(name) : this.enable(name) }
   getByFileName(name) {
-    const all = Plugins.getAll();//getAll not defined?
+    const all = this.getAll(); 
     const done=false
     for (var i = 0; (i < all.length && !done); i++) {
       const plug=all[i].meta.file.split('\\');
@@ -65,8 +65,8 @@ const Plugins = new class {
   }
 }
 
-const watcher=require('fs').watch(_dir,{},(_,f)=>{
-  const plug=Plugins.getByFileName(f)
+const watcher = _fs.watch(_dir,{},(_,f)=>{
+  const plug = Plugins.getByFileName(f)
   if(Plugins.isEnabled(plug)){
     Plugins.disable(plug)
     Plugins.enable(plug)

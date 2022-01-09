@@ -12,25 +12,26 @@ interface Addon {
 }
 
 interface Api {
-  find: (filter:Array<string> | Function) => any | {
-    all: (filter:Function) => any
-    byName: (name:string) => any
-    displayName: (name:string) => any | {
-      type: (type:string) => any
-      typeRender: (type:string) => any
+  find: (filter:Array<string> | Function) => (any | null) | {
+    all: (filter:Function) => (any | null)
+    byName: (name:string) => (any | null)
+    displayName: (name:string) => (any | null) | {
+      type: (type:string) => (any | null)
+      typeRender: (type:string) => (any | null)
     }
     getId: (module:object) => number
-    id: (id:number) => any
-    props: (props:Array<string>) => any | {
-      all: (props:Array<string>) => any
-      default: (props:Array<string>) => any
+    id: (id:number) => (any | null)
+    props: (props:Array<string>) => (any | null) | {
+      all: (props:Array<string>) => (any | null)
+      default: (props:Array<string>) => (any | null)
     }
-    prototypes: (prototypes:Array<string>) => any | {
-      all: (prototypes:Array<string>) => any
+    prototypes: (prototypes:Array<string>) => (any | null) | {
+      all: (prototypes:Array<string>) => (any | null)
     }
     webpackExports: any
     isDeveloper: Boolean
   }
+  localHostURL: string
   joinOfficialServer: () => void
   joinServer: (code:string, goTo:boolean) => void
   modal: {
@@ -110,6 +111,7 @@ interface Api {
     update: (scss:string) => void
     openPopout: () => void
   }
+  FluxDispatcher:any
   React: {
     createElement: (type:string, props:any, ...children:any[]) => any
     createFactory: (type:string) => any
@@ -146,6 +148,7 @@ interface Api {
   }
 } 
 
+// @ts-nocheck
 declare const DrApi: Api
 
 interface window {

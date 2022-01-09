@@ -72,7 +72,7 @@ const Context = React.memo(({ joined }) => {
           React.createElement(Menu.MenuItem, {
             id: "discord-server",
             label: joined ? "Already joined" : "Join The Discord Server",
-            icon: () => React.createElement(Discord, { className: "DrDiscordDiscordLogo" }),
+            icon: () => React.createElement(Discord, { className: "Dr-DiscordLogo" }),
             action: DrApi.joinOfficialServer
           }),
           React.createElement(Menu.MenuSeparator),

@@ -45,51 +45,51 @@ const Card = React.memo((props) => {
 
   const [enabled, setEnabled] = React.useState(DrApi[type].isEnabled(meta.name))
   return React.createElement("div", {
-    className: "DrDiscord-card",
+    className: "Dr-card",
     type,
     id: meta.name,
     children: [
       React.createElement("div", {
-        className: "DrDiscord-card-header-wrapper",
+        className: "Dr-card-header-wrapper",
         children: React.createElement("div", {
-          className: "DrDiscord-card-header",
+          className: "Dr-card-header",
           children: [
             React.createElement("div", {
-              className: "DrDiscord-card-header-top",
+              className: "Dr-card-header-top",
               children: [
                 React.createElement("div", {
-                  className: "DrDiscord-card-header-name",
+                  className: "Dr-card-header-name",
                   children: meta.name
                 }),
                 React.createElement("div", {
-                  className: "DrDiscord-card-header-version",
+                  className: "Dr-card-header-version",
                   children: `v${meta.version}`
                 }),
               ]
             }),
             React.createElement("div", {
-              className: "DrDiscord-card-header-author",
+              className: "Dr-card-header-author",
               children: meta.author
             })
           ]
         })
       }),
       React.createElement("div", {
-        className: "DrDiscord-card-content-wrapper",
+        className: "Dr-card-content-wrapper",
         children: React.createElement("div", {
-          className: "DrDiscord-content-footer",
+          className: "Dr-content-footer",
           children: meta.description
         })
       }),
       React.createElement("div", {
-        className: "DrDiscord-card-footer-wrapper",
+        className: "Dr-card-footer-wrapper",
         children: React.createElement("div", {
-          className: "DrDiscord-card-footer",
+          className: "Dr-card-footer",
           children: [
             React.createElement("div", {
-              className: "DrDiscord-card-footer-left",
+              className: "Dr-card-footer-left",
               children: [!props.plugin ? null : (typeof props.plugin.onSettings === "function" && enabled) ? React.createElement("div", {
-                className: "DrDiscord-card-footer-left-settings",
+                className: "Dr-card-footer-left-settings",
                 onClick: () => props.setContent(props.plugin.onSettings())
               }, React.createElement(Tooltip, {
                 text: "Settings",
@@ -97,7 +97,7 @@ const Card = React.memo((props) => {
               })) : null]
             }),
             React.createElement("div", {
-              className: "DrDiscord-card-footer-switch",
+              className: "Dr-card-footer-switch",
               children: React.createElement(Switch, {
                 checked: enabled,
                 onChange: () => {
@@ -333,7 +333,7 @@ const Tabs = React.memo(({
       setContent(null)
     },
     itemType: TabBar.Types.TOP_PILL,
-    className: ["DrDiscordSettingsTabBar", (tbc === 1) ? "IconsOnly" : null].join(" "),
+    className: ["Dr-SettingsTabBar", (tbc === 1) ? "IconsOnly" : null].join(" "),
     children: [
       React.createElement(TabBar.Item, {
         children: [
@@ -393,7 +393,7 @@ class Themes extends React.Component {
     return React.createElement("div", {
       children: [
         React.createElement("div", {
-          className: "DrDiscordSettingsTop",
+          className: "Dr-SettingsTop",
           children: [
             React.createElement(Button.default, {
               children: "Open Folder",
@@ -427,7 +427,7 @@ class Themes extends React.Component {
           ]
         }),
         React.createElement("div", {
-          className: "DrDiscordSettingsAddons",
+          className: "Dr-SettingsAddons",
           children: [
             Themes.map(theme => React.createElement(Card, {
               ...theme,
@@ -451,7 +451,7 @@ class Plugins extends React.Component {
     return React.createElement("div", {
       children: [
         React.createElement("div", {
-          className: "DrDiscordSettingsTop",
+          className: "Dr-SettingsTop",
           children: [
             React.createElement(Button.default, {
               children: "Open Folder",
@@ -485,7 +485,7 @@ class Plugins extends React.Component {
           ]
         }),
         React.createElement("div", {
-          className: "DrDiscordSettingsAddons",
+          className: "Dr-SettingsAddons",
           children: [
             Plugins.map(theme => React.createElement(Card, {
               ...theme,
@@ -512,11 +512,11 @@ module.exports = React.memo(({
 
   return React.createElement(ModalElements.ModalRoot, {
     ...mProps,
-    className: "DrDiscordSettingsModal",
+    className: "Dr-SettingsModal",
     size: ModalElements.ModalSize.LARGE,
     children: [
       (pi === 0) ? React.createElement("div", {
-        className: "DrDiscordSettingsTabBarWrapper",
+        className: "Dr-SettingsTabBarWrapper",
         children: React.createElement(Tabs, {
           page,
           setPage,

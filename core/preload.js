@@ -7,8 +7,10 @@ const _path = require("path")
 const _fs = require("fs")
 const logger = require("./logger")
 const { exec } = require("child_process")
-const request = require("request")
+const request = require("./request")
 const sucrase = require("sucrase")
+
+const LocalURL = require("./server")
 
 function Compiler(module, filename) {
   const jsx = _fs.readFileSync(filename, "utf8");
@@ -20,9 +22,10 @@ function Compiler(module, filename) {
   module._compile(compiled, filename)
 }
 
-require.extensions[".jsx"] = Compiler
-require.extensions[".ts"] = Compiler
-require.extensions[".tsx"] = Compiler
+for (const jsType of [".jsx", ".ts", ".tsx"]) {
+  require.extensions[jsType] = Compiler
+  Object.freeze(require.extensions[jsType])
+}
 
 const DataStore = require("./datastore")
 
@@ -74,14 +77,18 @@ else { console.error("No preload path found!") }
     // Monaco
     const requirejsModule = await fetch("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js").then(e => e.text())
     topWindow.eval(requirejsModule)
-    topWindow.requirejs.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs'}});
+    topWindow.requirejs.config({
+      paths: {
+        "vs": "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs"
+      }
+    })
     topWindow.MonacoEnvironment = {
       getWorkerUrl: function (workerId, label) {
         return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
           self.MonacoEnvironment = {
-            baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/'
+            baseUrl: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/"
           };
-          importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs/base/worker/workerMain.js');`
+          importScripts("https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs/base/worker/workerMain.js");`
         )}`
       }
     }
@@ -108,10 +115,34 @@ else { console.error("No preload path found!") }
     const sassStylingFile = _path.join(__dirname, "styles.scss")
     stylingApi.inject("DrDiscordStyles", stylingApi.sass({ file: sassStylingFile }))
     _fs.watchFile(sassStylingFile, {persistent: true, interval: 1000}, () => {
-      console.log("[DrDiscord]", "Styles changed, reloading...")
+      logger.log("DrDiscord", "Styles changed, reloading...")
       stylingApi.uninject("DrDiscordStyles")
       stylingApi.inject("DrDiscordStyles", stylingApi.sass({ file: sassStylingFile }))
     })
+    //
+    const Analytics = find(["getSuperPropertiesBase64"])
+    const Reporter = find(["submitLiveCrashReport"])
+    const Handlers = find(["analyticsTrackingStoreMaker"])
+    const Sentry = {
+      main: topWindow.__SENTRY__.hub,
+      client: topWindow.__SENTRY__.hub.getClient()
+    }
+    Analytics.track = () => {}
+    Handlers.AnalyticsActionHandlers.handleTrack = () => {}
+    Reporter.submitLiveCrashReport = () => {}
+    Sentry.client.close()
+    Sentry.main.getStackTop().scope.clear()
+    Sentry.main.getScope().clear()
+    Sentry.main.addBreadcrumb = () => {}
+    Object.assign(topWindow.console, ["debug", "info", "warn", "error", "log", "assert"].forEach((method) => {
+        if (topWindow.console[method].__sentry_original__) {
+          topWindow.console[method] = topWindow.console[method].__sentry_original__
+        } else if (topWindow.console[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__) {
+          topWindow.console[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__ = topWindow.console[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__.__sentry_original__
+        }
+      })
+    )
+    toWindow("console", topWindow.console)
     //
     let interval = setInterval(async () => {
       if (!find(["createElement", "Component"])?.createElement) return
@@ -119,7 +150,7 @@ else { console.error("No preload path found!") }
       clearInterval(interval)
       //
       const DrApi = {
-        patch, find, DataStore, Themes, 
+        patch, find, DataStore, Themes, localHostURL: LocalURL,
         request,
         React: {...find(["createElement", "Component"])},
         ReactDOM: {...find(["render", "hydrate"])},
@@ -154,10 +185,10 @@ else { console.error("No preload path found!") }
           })
         },
         showConfirmationModal(title, content, options = {}) {
-          const Markdown = DrApi.find(m => m.default?.displayName === "Markdown" && m.default.rules).default
-          const ConfirmationModal = DrApi.find("ConfirmModal").default
-          const Button = DrApi.find(["ButtonColors"])
-          const { Messages } = DrApi.find(m => m.default?.Messages?.OKAY).default
+          const Markdown = find(m => m.default?.displayName === "Markdown" && m.default.rules).default
+          const ConfirmationModal = find("ConfirmModal").default
+          const Button = find(["ButtonColors"])
+          const { Messages } = find(m => m.default?.Messages?.OKAY).default
 
           const emptyFunction = () => {}
           const {onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = Messages.OKAY, cancelText = Messages.CANCEL, danger = false, key = undefined} = options
@@ -292,6 +323,7 @@ else { console.error("No preload path found!") }
         isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
       }
       toWindow("DrApi", DrApi)
+      //
       const {
         React, modal: {
           functions: { openModal }
@@ -306,7 +338,7 @@ else { console.error("No preload path found!") }
       // 
       await waitFor(".guilds-1SWlCJ")
       // Add plugin language
-      DrApi.find(["registerLanguage"]).registerLanguage("plugin", DrApi.find(m => m.name === "" && m.toString().startsWith("function(e){const o=t")))
+      find(["registerLanguage"]).registerLanguage("plugin", find(m => m.name === "" && m.toString().startsWith("function(e){const o=t")))
       //
       const { codeBlock } = find(["parse", "parseTopic"]).defaultRules
       patch("DrDiscordInternal-CodeBlock-Patch", codeBlock, "react", ([props], origRes) => {
@@ -324,7 +356,7 @@ else { console.error("No preload path found!") }
               meta[key] = value
             }
             res.props.children.push(React.createElement("button", {
-              className: "dr-discord-codeblock-add-plugin",
+              className: "Dr-codeblock-add-plugin",
               children: `Install ${meta.name}`,
               onClick: () => {
                 DrApi.showConfirmationModal("Install Plugin", [
@@ -344,7 +376,7 @@ else { console.error("No preload path found!") }
           patch.quick(origRes.props, "render", (_, res) => {
             if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
             res.props.children.push(React.createElement("button", {
-              className: "dr-discord-codeblock-copy-button",
+              className: "Dr-codeblock-copy-button",
               children: "Add to custom CSS",
               onClick: () => {
                 let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
@@ -365,13 +397,14 @@ else { console.error("No preload path found!") }
       DrApi.Plugins = Plugins
       //
       const PanelButton = require("./ui/PanelButton")
-      //
       patch("DrDiscordInternal-Panel-Patch", ele.__proto__, "render", (_, res) => {
         res.props.children[res.props.children.length - 1].props.children.unshift(
           React.createElement(PanelButton)
         )
       })
       ele.forceUpdate()
+      //
+      const FluxDispatcher = find(["_currentDispatchActionType", "_processingWaitQueue"])
       //
       const SettingsModal = require("./ui/SettingsModal")
       const openSettings = (page, reactElement) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page, reactElement }))
@@ -392,7 +425,8 @@ else { console.error("No preload path found!") }
           }
           toWindow("DrApi", Object.assign({}, DrApi, {
             toggleCC,
-            openSettings
+            openSettings,
+            FluxDispatcher
           }))
           if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
           num++
@@ -403,14 +437,14 @@ else { console.error("No preload path found!") }
       })
       logger.log("DrDiscord", "Loaded!")
       //add cosmetics
-      DrApi.find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
+      find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
       // Badges
-      patch("DrDiscordInternal-Badge-Patch", DrApi.find("UserProfileBadgeList"), "default", ([{user}], res) => {
+      patch("DrDiscordInternal-Badge-Patch", find("UserProfileBadgeList"), "default", ([{user}], res) => {
         const Badge = Badges[user.id]
         if (!Badge) return
-        res.props.children.push(React.createElement(DrApi.find("Tooltip").default, {
+        res.props.children.push(React.createElement(find("Tooltip").default, {
           text: Badges[user.id].name, 
-          children: (props) => React.createElement(DrApi.find("Clickable").default, {
+          children: (props) => React.createElement(find("Clickable").default, {
             ...props,
             className: "Dr-Badge",
             children: React.createElement(Badge.icon.tag, {
@@ -425,6 +459,22 @@ else { console.error("No preload path found!") }
             })
           })
         }))
+      })
+      // Current Channel/Guild ATTR
+      let currentGuild = find(["getLastSelectedGuildId"]).getGuildId()
+      if (currentGuild) document.body.setAttribute("data-guild-id", currentGuild) 
+      else document.body.removeAttribute("data-guild-id")
+
+      let currentChannel= find(["getLastSelectedChannelId", "getChannelId"]).getChannelId()
+      if (currentChannel) document.body.setAttribute("data-channel-id", currentChannel)
+      else document.body.removeAttribute("data-channel-id")
+
+      FluxDispatcher.subscribe("CHANNEL_SELECT", ({ channelId, guildId }) => {
+        if (guildId) document.body.setAttribute("data-guild-id", guildId) 
+        else document.body.removeAttribute("data-guild-id")
+
+        if (channelId) document.body.setAttribute("data-channel-id", channelId) 
+        else document.body.removeAttribute("data-channel-id")
       })
     }, 100)
   })

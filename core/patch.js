@@ -7,7 +7,12 @@ function patch(name, module, funcName, callback, opts = {}) {
   if (!module) throw new Error("Module is required")
   if (!funcName) throw new Error("FuncName is required")
   if (!callback) throw new Error("Callback is required")
-  if (!module[funcName]) throw new Error("Function doesnt exist in Module")
+  let funcExists = true
+  if (!module[funcName]) {
+    module[funcName] = () => {}
+    funcExists = false
+  }
+
   const { type = "after" } = opts
   
   const original = module[funcName]
@@ -38,16 +43,20 @@ function patch(name, module, funcName, callback, opts = {}) {
   function unpatch() {
     if (didUnpatch) return
     didUnpatch = true
-    delete patches[name]
+    if (!funcExists) delete module[funcName]
+    // delete patches[name]
     module[funcName] = module[funcName].__originalFunction
     module[funcName].__patches.splice(position, 1)
     const oldPatches = module[funcName].__patches
     module[funcName].__patches = []
     for (const _patch of oldPatches) setImmediate(patch, ..._patch)
   }
-  if (patches[name]) patches[name].push(unpatch)
-  else patches[name] = [unpatch]
-  return () => unpatch()
+  if (name.startsWith("DrDiscordInternal") || name === "Quick-Patch") return
+  else {
+    if (patches[name]) patches[name].push(unpatch)
+    else patches[name] = [unpatch]
+    return () => unpatch()
+  }
 }
 
 Object.assign(patch, {
@@ -59,12 +68,11 @@ Object.assign(patch, {
     if (name.startsWith("DrDiscordInternal")) return "DO NOT UNPATCH INTERNAL FUNCTIONS"
     let Patches = patches[name]
     if (!Patches) return 
-    if (Array.isArray(Patches)) for (const Patch of Patches) Patch()
+    for (const Patch of Patches) Patch()
   },
   quick: (...args) => {
-    let id = Math.random() * Date.now()
-    const patched = patch(id, ...args)
-    delete patches[id]
+    const patched = patch("Quick-Patch", ...args)
+    delete patches["Quick-Patch"]
     return patched
   }
 })

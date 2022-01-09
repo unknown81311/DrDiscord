@@ -8,7 +8,7 @@
     transform-origin: 62.5% 62.5%
   }
   // Settings
-  .DrDiscordSettingsTabBar {
+  .Dr-SettingsTabBar {
     margin-bottom: 10px;
     margin-top: 2px;
     padding: 0;
@@ -29,24 +29,24 @@
       }
     }
   }
-  .DrDiscordSettingsTabBarWrapper {
+  .Dr-SettingsTabBarWrapper {
     position: absolute;
     top: 0;
     transform: translateY(calc(-100% + 5px));
     background-color: var(--background-primary);
     border-radius: 5px 5px 0 0;
-    .DrDiscordSettingsTabBar {
+    .Dr-SettingsTabBar {
       margin-top: 4px;
       margin-bottom: 5px;
     }
   }
 }
 //
-.DrDiscordSettingsModal {
+.Dr-SettingsModal {
   min-width: 800px;
   max-width: 800px;
 }
-.DrDiscordSettingsModal .content-1LAB8Z {
+.Dr-SettingsModal .content-1LAB8Z {
   &[datapage="3"], &[datapage="5"] {
     padding: 0 !important;
     overflow: hidden !important;
@@ -93,7 +93,7 @@
   & > code:not(:only-child) {
     padding-bottom: 29px;
   }
-  .dr-discord-codeblock-copy-button, .dr-discord-codeblock-add-plugin {
+  .Dr-codeblock-copy-button, .Dr-codeblock-add-plugin {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -106,7 +106,7 @@
   }
 }
 //
-.DrDiscordDiscordLogo { width: 100% }
+.Dr-DiscordLogo { width: 100% }
 //
 #monaco-editor { height: 100% }
 //
@@ -215,7 +215,7 @@
   }
 }
 //
-.DrDiscordSettingsTop {
+.Dr-SettingsTop {
   display: flex;
   width: 100%;
   margin-bottom: 10px;
@@ -232,12 +232,12 @@
     }
   }
 }
-.DrDiscordSettingsAddons:not(.Empty) {
+.Dr-SettingsAddons:not(.Empty) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-gap: 6px;
   color: var(--text-normal);
-  .DrDiscord-card {
+  .Dr-card {
     border-radius: 4px;
     padding: 6px;
     background-color: var(--background-secondary);

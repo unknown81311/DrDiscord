@@ -41,7 +41,7 @@ _fs.readdir(_dir, (err, files) => {
       themes.push({ meta, theme: data })
       if (DrDiscord.enabledThemes[meta.name]) document.querySelector("drdiscord").appendChild(Object.assign(document.createElement("style"), {
         innerHTML: meta.css,
-        id: `drdiscord-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`
+        id: `Dr-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`
       }))
     })
   }
@@ -59,18 +59,36 @@ const Themes = new class {
     DataStore.setData("DR_DISCORD_SETTINGS", "enabledThemes", { ...this.enabledThemes, [meta.name]: true })
     document.querySelector("drdiscord").appendChild(Object.assign(document.createElement("style"), {
       innerHTML: meta.css,
-      id: `drdiscord-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`
+      id: `Dr-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`
     }))
   }
   disable(name) {
     const { meta } = Themes.get(name)
     DataStore.setData("DR_DISCORD_SETTINGS", "enabledThemes", { ...this.enabledThemes, [meta.name]: false })
-    document.querySelector(`#drdiscord-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`).remove()
+    document.querySelector(`#Dr-theme-${meta.name.replace(/[^a-z0-9]/gi, "")}`).remove()
   }
   toggle(name) { return this.isEnabled(name) ? this.disable(name) : this.enable(name) }
+  getByFileName(name) {
+    const all = this.getAll(); 
+    const done=false
+    for (var i = 0; (i < all.length && !done); i++) {
+      const plug=all[i].meta.file.split('\\');
+      if(plug[plug.length-1]==name)done==true;
+    }
+    return(Themes.get(all[i-1].meta.name)||undefined);
+  }
 }
 
+const watcher = _fs.watch(_dir, {},(_,f)=>{
+  const plug = Themes.getByFileName(f)
+  if(Themes.isEnabled(plug)){
+    Themes.disable(plug)
+    Themes.enable(plug)
+  }
+})
+
 module.exports = {
+  getByFileName:(name)=>Themes.getByFileName(name),
   get: (name) => Themes.get(name),
   getAll: () => Themes.getAll(),
   getEnabled: () => Themes.getEnabled(),
