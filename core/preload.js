@@ -405,6 +405,8 @@ else { console.error("No preload path found!") }
       logger.log("DrDiscord", "Loaded!")
       //add cosmetics
       DrApi.find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
+      // add server and channel id attributes to body
+      DrApi.find(["_currentDispatchActionType", "_processingWaitQueue"]).subscribe("CHANNEL_SELECT",(a)=>["guildId","channelId"].map(e=>a[e]?document.body.setAttribute(e,a[e]):document.body.removeAttribute(e)))
       // Badges
       patch("DrDiscordInternal-Badge-Patch", DrApi.find("UserProfileBadgeList"), "default", ([{user}], res) => {
         const Badge = Badges[user.id]
