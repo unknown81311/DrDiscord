@@ -123,7 +123,6 @@ else { console.error("No preload path found!") }
         request,
         React: {...find(["createElement", "Component"])},
         ReactDOM: {...find(["render", "hydrate"])},
-        ReactSpring: {...find(["useSpring", "useTransition"])},
         styling: {
           insert: (name, css, sass = false) => stylingApi.inject(name, css, sass),
           remove: (name) => stylingApi.uninject(name),

@@ -15,13 +15,14 @@ module.exports = class CustomCSS extends React.Component {
     this.state = {
       error: false
     }
+    this.ref = React.createRef()
   }
   componentDidError() {
     this.setState({ error: true })
   }
   componentDidMount() {
     if (!window?.monaco?.editor?.create) return this.setState({ error: true })
-    this.editor = window.monaco.editor.create(window.document.getElementById("custom-css"), {
+    this.editor = window.monaco.editor.create(this.ref.current, {
       language: "scss",
       theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
       value: settings.CSS,
@@ -37,7 +38,8 @@ module.exports = class CustomCSS extends React.Component {
   }
   render() {
     return this.state.error ? React.createElement("div", null, "An error accord with the monaco editor"): React.createElement("div", {
-      id: "custom-css"
+      id: "monaco-editor",
+      ref: this.ref
     })
   }
 }

@@ -47,12 +47,39 @@
   max-width: 800px;
 }
 .DrDiscordSettingsModal .content-1LAB8Z {
-  &[datapage="3"] {
+  &[datapage="3"], &[datapage="5"] {
     padding: 0 !important;
     overflow: hidden !important;
     border-radius: 0
   }
-  #custom-css { border-radius: 8px }
+  #cjs {
+    .Dr-CustomJS-Top {
+      margin: 0 16px 6px;
+      &>button {
+        width: 32px;
+        svg {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
+      }
+    }
+    .divider-3573oO {
+      display: none;
+    }
+    .container-2_Tvc_ {
+      .title-31JmR4 {
+        margin-right: 30px
+      }
+      margin-bottom: 0;
+      margin-left: auto;
+
+      padding-top: 8px;
+    }
+    height: 100%;
+  }
+  #monaco-editor { border-radius: 8px }
   .monaco-editor, .overflow-guard { border-radius: 0 0 5px 5px }
   .context-view { 
     z-index: 999999;
@@ -81,7 +108,7 @@
 //
 .DrDiscordDiscordLogo { width: 100% }
 //
-#custom-css { height: 100% }
+#monaco-editor { height: 100% }
 //
 #custom-css-popout {
   position: fixed;

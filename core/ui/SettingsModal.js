@@ -4,31 +4,12 @@ const {
 const DataStore = require("../datastore")
 const {
   ipcRenderer,
-  shell,
-  webFrame: {
-    top: {
-      context: window
-    }
-  }
+  shell
 } = require("electron")
+
 const _fs = require("fs")
 const _path = require("path")
-const {
-  React,
-  styling,
-  modal: {
-    functions: {
-      openModal
-    },
-    elements: {
-      ModalRoot,
-      ModalContent,
-      ModalFooter,
-      ModalHeader,
-      ModalSize
-    }
-  }
-} = DrApi
+const { React } = DrApi
 const ModalElements = DrApi.find(["ModalRoot"])
 const Flex = {
   Child: FlexChild
@@ -52,91 +33,9 @@ const Icons = require("./Icons")
 const TextInput = DrApi.find("TextInput").default
 
 const CustomCSS = require("./CustomCSS")
-
-let enableCJS
-
+const CustomJS = require("./CustomJS")
 
 const settings = DataStore("DR_DISCORD_SETTINGS")
-
-DrApi.styling.insert("custom-js-spin", '@keyframes customJSspin{from{transform:rotate(0deg)}to{transform:rotate(180deg)}}#custom-js-refresh:hover{animation: customJSspin 250ms linear}')
-
-class CustomJS extends React.Component {
-  constructor() {
-    super()
-  }
-
-  componentDidMount() {
-    this.editor = window.monaco.editor.create(window.document.getElementById("custom-js"), {
-      language: "javascript",
-      theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
-      value: settings._JS,
-    })
-    this.editor.onDidChangeModelContent(() => {
-      const value = this.editor.getValue()
-      DataStore.setData("DR_DISCORD_SETTINGS", "_JS", value)
-      if (global.FloatingCSSEditor) FloatingCSSEditor.setValue(value)
-    })
-    const contextmenu = this.editor.getContribution('editor.contrib.contextmenu')
-    contextmenu._onContextMenu = _ => _
-
-  }
-
-  render() {
-    return React.createElement("div", {
-        id: "custom-js-wrapper",
-        style: {
-          height: '100%'
-        }
-      },
-      React.createElement("svg", {
-        id: "custom-js-refresh",
-        onClick: () => {
-          if (window.document.getElementById("custom-js").textContent.includes("token")) {
-            DrApi.showConfirmationModal('WAIT!', [`Are you sure you want to exicute this script?`, `This script contains the keyword token and could use it for maliciousways!`], {
-              cancelText: "NO!",
-              onConfirm: () => {
-                DrApi.modal.functions.closeAllModals()
-              },
-              confirmText: "yes, im sure",
-              onConfirm: () => {
-                try {
-                  require("module").prototype._compile(DrApi.DataStore("DR_DISCORD_SETTINGS")._JS,'CustomJS')
-                } catch (e) {
-                  DrApi.showConfirmationModal('Custom JS Error:', [String(e)],{cancelText:null})
-                }
-              }
-            })
-          } else {
-            try {
-              require("module").prototype._compile(DrApi.DataStore("DR_DISCORD_SETTINGS")._JS,'CustomJS')
-            } catch (e) {
-              DrApi.showConfirmationModal('Custom JS Error:', [String(e)],{cancelText:null})
-            }
-          }
-        },
-        fill: "currentcolor",
-        viewBox: "0 0 24 24",
-        style: {
-          height: '24px',
-          cursor: 'pointer',
-          color: 'var(--interactive-normal)',
-          "margin-bottom": '5px',
-          "transform-origin": 'center',
-
-        },
-        children: React.createElement("path", {
-          d: "M9 12l-4.463 4.969-4.537-4.969h3c0-4.97 4.03-9 9-9 2.395 0 4.565.942 6.179 2.468l-2.004 2.231c-1.081-1.05-2.553-1.699-4.175-1.699-3.309 0-6 2.691-6 6h3zm10.463-4.969l-4.463 4.969h3c0 3.309-2.691 6-6 6-1.623 0-3.094-.65-4.175-1.699l-2.004 2.231c1.613 1.526 3.784 2.468 6.179 2.468 4.97 0 9-4.03 9-9h3l-4.537-4.969z"
-        })
-      }),
-      React.createElement("div", {
-        id: "custom-js",
-        style: {
-          height: '100%'
-        }
-      })
-    )
-  }
-}
 
 const Card = React.memo((props) => {
   const {
@@ -309,12 +208,15 @@ const DrSettings = React.memo(({
     tbc,
     setTBC
   },
+  CustomJS: {
+    customJS, setCustomJS
+  }
 }) => {
   const [cc, setCC] = React.useState(settings.cc)
   const [transparency, setTransparency] = React.useState(settings.transparency)
   const [isDeveloper, setIsDeveloper] = React.useState(DrApi.isDeveloper)
   const [minimalMode, setMinimalMode] = React.useState(settings.minimalMode)
-  const [customJS, setCustomJS] = React.useState(settings.cjs)
+
   return React.createElement(React.Fragment, {
     children: [
       React.createElement(Form, {
@@ -419,6 +321,9 @@ const Tabs = React.memo(({
   TabBarContent: {
     tbc
   },
+  CustomJS: {
+    customJS
+  },
   setContent
 }) => {
   return React.createElement(TabBar, {
@@ -465,13 +370,13 @@ const Tabs = React.memo(({
         ],
         id: 4,
       }),
-      React.createElement(TabBar.Item, {
+      customJS ? React.createElement(TabBar.Item, {
         children: [
-          // (tbc <= 1 && (DrApi.DataStore("DR_DISCORD_SETTINGS").cjs||false)) ? React.createElement(Icons.CustomJS) : null,
-          (tbc === 0 || tbc === 2 && (DrApi.DataStore("DR_DISCORD_SETTINGS").cjs || false)) ? React.createElement("span", null, "Custom JS") : null
+          (tbc <= 1) ? React.createElement(Icons.CustomJS) : null,
+          (tbc === 0 || tbc === 2) ? React.createElement("span", null, "Custom JS") : null
         ],
         id: 5,
-      })
+      }) : null
     ]
   })
 })
@@ -593,14 +498,16 @@ class Plugins extends React.Component {
     })
   }
 }
+
 module.exports = React.memo(({
   mProps,
   PAGE,
   reactElement
 }) => {
   const [pi, setPI] = React.useState(settings.PageItem || 0)
+  const [customJS, setCustomJS] = React.useState(settings.cjs)
   const [page, setPage] = React.useState(PAGE || 0)
-  const [tbc, setTBC] = React.useState(settings.TabBarContent === 0 ? 0 : settings.TabBarContent)
+  const [tbc, setTBC] = React.useState(settings.TabBarContent === 0 ? 1 : settings.TabBarContent)
   const [content, setContent] = React.useState(reactElement)
 
   return React.createElement(ModalElements.ModalRoot, {
@@ -615,6 +522,10 @@ module.exports = React.memo(({
           setPage,
           TabBarContent: {
             tbc
+          },
+          CustomJS: {
+            customJS, 
+            setCustomJS
           },
           setContent
         })
@@ -645,6 +556,10 @@ module.exports = React.memo(({
                 TabBarContent: {
                   tbc
                 },
+                CustomJS: {
+                  customJS, 
+                  setCustomJS
+                },
                 setContent
               }) : null,
               React.createElement(FlexChild, {
@@ -663,13 +578,15 @@ module.exports = React.memo(({
             pi,
             setPI
           },
+          CustomJS: {
+            customJS, 
+            setCustomJS
+          },
           TabBarContent: {
             tbc,
             setTBC
           }
-        }) : page === 1 ? React.createElement(Plugins, {
-          setContent
-        }) : page === 2 ? React.createElement(Themes) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : page === 5 && (DrApi.DataStore("DR_DISCORD_SETTINGS").cjs || false) ? React.createElement(CustomJS) : null : content, ]
+        }) : page === 1 ? React.createElement(Plugins, { setContent }) : page === 2 ? React.createElement(Themes) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : page === 5 && (DrApi.DataStore("DR_DISCORD_SETTINGS").cjs || false) ? React.createElement(CustomJS) : null : content, ]
       })
     ]
   })
