@@ -1,5 +1,8 @@
 const { webFrame, ipcRenderer } = require("electron")
 const { Module } = _module = require("module")
+
+Module.globalPaths.push(require("path").join(process.resourcesPath, "app.asar/node_modules"))
+
 const _path = require("path")
 const _fs = require("fs")
 const logger = require("./logger")
@@ -28,8 +31,6 @@ logger.log("DrDiscord", "Preloading...")
 let Badges
 
 request("https://raw.githubusercontent.com/Dr-Discord/DrDiscord/main/backend/Badges.json", (_, __, body) => Badges = JSON.parse(body))
-
-Module.globalPaths.push(_path.join(process.resourcesPath, "app.asar/node_modules"))
 
 const sleep = (time) => new Promise(resolve =>
   setTimeout(resolve, time)
@@ -118,7 +119,8 @@ else { console.error("No preload path found!") }
       clearInterval(interval)
       //
       const DrApi = {
-        patch, find, DataStore, Themes, request,
+        patch, find, DataStore, Themes, 
+        request,
         React: {...find(["createElement", "Component"])},
         ReactDOM: {...find(["render", "hydrate"])},
         ReactSpring: {...find(["useSpring", "useTransition"])},
