@@ -73,7 +73,7 @@ interface Api {
     unpatchAll: (name:string) => void
   }
   request: (...args:any) => any | any
-  showConfirmationModal: (title:string, content:Array<any>|any, options:Object) => Number
+  showConfirmationModal: (title:string, content?:Array<any>|any, options?:Object) => Number
   toggleCC: () => void
   updateDrDiscord: () => void
   util: {
