@@ -146,6 +146,8 @@ interface Api {
   }
 } 
 
+declare const DrApi: Api
+
 interface window {
   DrApi: Api
   require: (module:string) => any | any
