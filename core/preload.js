@@ -10,8 +10,6 @@ const { exec } = require("child_process")
 const request = require("./request")
 const sucrase = require("sucrase")
 
-const LocalURL = require("./server")
-
 function Compiler(module, filename) {
   const jsx = _fs.readFileSync(filename, "utf8");
   const compiled = sucrase.transform(jsx, {
@@ -150,7 +148,7 @@ else { console.error("No preload path found!") }
       clearInterval(interval)
       //
       const DrApi = {
-        patch, find, DataStore, Themes, localHostURL: LocalURL,
+        patch, find, DataStore, Themes,
         request,
         React: {...find(["createElement", "Component"])},
         ReactDOM: {...find(["render", "hydrate"])},
@@ -336,7 +334,7 @@ else { console.error("No preload path found!") }
         return oldLoad.apply(this, request)
       })
       // 
-      await waitFor(".guilds-1SWlCJ")
+      await waitFor(".guilds-2JjMmN")
       // Add plugin language
       find(["registerLanguage"]).registerLanguage("plugin", find(m => m.name === "" && m.toString().startsWith("function(e){const o=t")))
       //
@@ -391,7 +389,7 @@ else { console.error("No preload path found!") }
           })
         }
       })
-      const ele = getOwnerInstance(await waitFor(".panels-j1Uci_ > .container-3baos1"))
+      const ele = getOwnerInstance(await waitFor(".panels-3wFtMD > .container-YkUktl"))
       //
       let Plugins = require("./plugins")
       DrApi.Plugins = Plugins
