@@ -66,7 +66,14 @@ else { console.error("No preload path found!") }
     while (!(elem = topWindow.document.querySelector(querySelector))) await sleep(1)
     return elem
   }
+  async function waitUntil(condition) {
+    let item
+    while (!(item = condition)) await sleep(1)
+    return item
+  }
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
+    //
+    const { openPopout } = require("./ui/CustomCSS")
     //
     document.body.classList.add("DrDiscord")
     //
@@ -147,8 +154,13 @@ else { console.error("No preload path found!") }
       // clear interval
       clearInterval(interval)
       //
+      let depFind = Object.assign((...args) => {
+        logger.warn("DrDiscord", "'find' is deprecated, use 'getModule' instead")
+        return find(...args)
+      }, find)
+      //
       const DrApi = {
-        patch, find, DataStore, Themes,
+        patch, find: depFind, DataStore, Themes, getModule: find,
         request,
         React: {...find(["createElement", "Component"])},
         ReactDOM: {...find(["render", "hydrate"])},
@@ -167,7 +179,7 @@ else { console.error("No preload path found!") }
           const { acceptInvite } = find(["acceptInvite"])
 
           const res = acceptInvite(code)
-          if (goTo) res.then(({guild, channel}) => transitionToGuild(guild.id, channel.id))
+          if (goTo) res.then(({ guild, channel }) => transitionToGuild(guild.id, channel.id))
         },
         joinOfficialServer: () => {
           const { transitionToGuild } = find(["transitionToGuild"])
@@ -212,108 +224,12 @@ else { console.error("No preload path found!") }
             let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
             return { css: stylingApi.sass(customCSS || ""), scss: customCSS || "" }
           },
-          openPopout: () => {
-            const div = Object.assign(document.createElement("div"), {
-              id: "custom-css-popout"
-            })
-            const header = Object.assign(document.createElement("div"), {
-              id: "custom-css-popout-header"
-            })
-  
-            header.append(Object.assign(document.createElement("button"), {
-              onclick: () => {
-                div.remove()
-              },
-              innerText: "Close"
-            }))
-            const content = Object.assign(document.createElement("div"), {
-              id: "custom-css-popout-content-wrapper"
-            })
-            content.append(Object.assign(document.createElement("div"), {
-              id: "custom-css-popout-content"
-            }))
-            div.append(header, content)
-            
-            header.onmousedown = ({ clientX, clientY }) => {
-              const { x, y, width, height } = div.getBoundingClientRect()
-              function move(e) {
-                let left = (e.clientX - clientX + x)
-                if (left > (innerWidth - width - 1)) left = (innerWidth - width - 1)
-                else if (left < 1) left = 1
-                let top = (e.clientY - clientY + y)
-                if (top > (innerHeight - height - 1)) top = (innerHeight - height - 1)
-                else if (top < 1) top = 1
-  
-                div.style.left = `${left}px`
-                div.style.top = `${top}px`
-              }
-              function unMove() {
-                window.removeEventListener("mousemove", move)
-                window.removeEventListener("mouseup", unMove)
-              }
-              window.addEventListener("mousemove", move)
-              window.addEventListener("mouseup", unMove)
-            }
-  
-            document.getElementById("app-mount").appendChild(div)
-  
-            const resizer = Object.assign(document.createElement("div"), {
-              id: "custom-css-popout-resizer"
-            })
-            div.append(resizer)
-  
-            let divRect = div.getBoundingClientRect()
-            div.style.left = `${(innerWidth / 2) - (divRect.width / 2)}px`
-            div.style.top = `${(innerHeight / 2) - (divRect.height / 2)}px`
-            div.style.minWidth = `${divRect.width + 1}px`
-            div.style.minHeight = `${divRect.height + 1}px`
-            div.style.maxWidth = "700px"
-            div.style.maxHeight = "700px"
-  
-            content.style.setProperty("--header", `${header.getBoundingClientRect().height}px`)
-  
-            const editor = topWindow.monaco.editor.create(content.childNodes[0], {
-              language: "scss",
-              theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
-              value: global.DrApi.customCSS.get().scss
-            })
-            editor.onDidChangeModelContent(() => {
-              try { global.DrApi.customCSS.update(editor.getValue()) }
-              catch (e) { 
-                // make error group
-                const ere = console.groupCollapsed("Error happened when compiling custom CSS: Click to expand")
-                console.error(e)
-                console.groupEnd(ere)
-              }
-            })
-            global.FloatingCSSEditor = editor
-  
-            resizer.onmousedown = () => {
-              function resize(ev) {
-                let resizerRect = div.getBoundingClientRect()
-                let width = ev.pageX - resizerRect.left
-                if (width < Number(div.style.minWidth.replace("px", ""))) width = div.style.minWidth
-                if (width > 700) width = "700px"
-                let height = ev.pageY - resizerRect.top
-                if (height < Number(div.style.minHeight.replace("px", ""))) height = div.style.minHeight
-                if (height > 700) height = "700px"
-                
-                div.style.width = `${width}px`
-                div.style.height = `${height}px`
-                editor.layout()
-              }
-              function unResize() {
-                window.removeEventListener("mousemove", resize)
-                window.removeEventListener("mouseup", unResize)
-              }
-              window.addEventListener("mousemove", resize)
-              window.addEventListener("mouseup", unResize)
-            }
-          }
+          openPopout
         },
         util: {
           logger,
           waitFor,
+          waitUntil,
           sleep,
           getOwnerInstance,
           getReactInstance
@@ -329,9 +245,17 @@ else { console.error("No preload path found!") }
       } = DrApi
       // Add react stuff
       patch.instead("DrDiscordInternal-require-Patch", _module, "_load", function(request, oldLoad) {
-        if (request[0] === "react") return DrApi.React
-        if (request[0] === "reactDOM") return DrApi.ReactDOM
-        return oldLoad.apply(this, request)
+        // Add React and ReactDOM to require
+        if (request[0] === "react") return () => DrApi.React
+        if (request[0] === "reactDOM") return () => DrApi.ReactDOM
+        // fancy stuff, ex 'require("DrApi/patch/patches")'
+        if (request[0].startsWith("DrApi")) return (() => {
+          let toReturn = DrApi
+          let splitRes = request[0].split("/")
+          for (let i = 1; i < splitRes.length; i++) toReturn = toReturn[splitRes[i]]
+          return toReturn ? () => toReturn : oldLoad
+        })()
+        return oldLoad
       })
       // 
       await waitFor(".guilds-2JjMmN")
@@ -347,7 +271,8 @@ else { console.error("No preload path found!") }
             let meta = {}
             let jsdoc = props.content.match(/\/\*\*([\s\S]*?)\*\//)[1]
             for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
-              ite = ite.replace("* @", "")
+              if (ite.startsWith("* @")) ite = ite.replace("* @", "")
+              else ite = ite.replace("*@", "")
               let split = ite.split(" ")
               let key = split[0]
               let value = split.slice(1).join(" ")
@@ -407,7 +332,7 @@ else { console.error("No preload path found!") }
       const SettingsModal = require("./ui/SettingsModal")
       const openSettings = (page, reactElement) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page, reactElement }))
       // Load CC
-      request("https://raw.githubusercontent.com/Cumcord/Cumcord/stable/dist/build.js", (err, _, body) => {
+      request("https://raw.githubusercontent.com/Cumcord/builds/main/build.js", (err, _, body) => {
         if (err) logger.error(err)
         else {
           let num = 0
@@ -431,7 +356,11 @@ else { console.error("No preload path found!") }
         }
       })
       Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
-        get: () => global.DrApi.isDeveloper
+        get: () => global.DrApi.isDeveloper,
+        set: (val) => {
+          global.DrApi.isDeveloper = val
+          DataStore.setData("DR_DISCORD_SETTINGS", "isDeveloper", val)
+        }
       })
       logger.log("DrDiscord", "Loaded!")
       //add cosmetics
@@ -457,22 +386,6 @@ else { console.error("No preload path found!") }
             })
           })
         }))
-      })
-      // Current Channel/Guild ATTR
-      let currentGuild = find(["getLastSelectedGuildId"]).getGuildId()
-      if (currentGuild) document.body.setAttribute("data-guild-id", currentGuild) 
-      else document.body.removeAttribute("data-guild-id")
-
-      let currentChannel= find(["getLastSelectedChannelId", "getChannelId"]).getChannelId()
-      if (currentChannel) document.body.setAttribute("data-channel-id", currentChannel)
-      else document.body.removeAttribute("data-channel-id")
-
-      FluxDispatcher.subscribe("CHANNEL_SELECT", ({ channelId, guildId }) => {
-        if (guildId) document.body.setAttribute("data-guild-id", guildId) 
-        else document.body.removeAttribute("data-guild-id")
-
-        if (channelId) document.body.setAttribute("data-channel-id", channelId) 
-        else document.body.removeAttribute("data-channel-id")
       })
     }, 100)
   })

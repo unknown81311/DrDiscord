@@ -9,21 +9,21 @@ const {
 const mod = require("module")
 
 const Icons = require("./Icons")
-const Tooltip = DrApi.find.prototypes("renderTooltip").default
-const TextInput = DrApi.find("TextInput").default
+const Tooltip = DrApi.getModule.prototypes("renderTooltip").default
+const TextInput = DrApi.getModule("TextInput").default
 
 const sucrase = require("sucrase")
 
 const settings = DataStore("DR_DISCORD_SETTINGS")
 
-const Button = DrApi.find(["ButtonColors"])
+const Button = DrApi.getModule(["ButtonColors"])
 const Flex = {
   Child: FlexChild
-} = DrApi.find("Flex").default
-const SwitchItem = DrApi.find("SwitchItem").default
+} = DrApi.getModule("Flex").default
+const SwitchItem = DrApi.getModule("SwitchItem").default
 
 function runCode(compiled) {
-  mod.prototype._compile(`try {\n${compiled}\n}\ncatch(e) {\nconsole.error(e)\n}`, "Custom JS")
+  mod.prototype._compile(`try {\nconst module = { exports: {}, children: [], filename: "", id: "", loaded: false, parent: null, paths: [], path: "" }\nconst ____OLDrequire = require\nrequire = (...args) => { const m = ____OLDrequire(...args); module.children.push(m); return m}\n  __dirname = process.env.DRDISCORD_DIR\n\n${compiled}\nreturn module.exports\n}\ncatch(e) {\nconsole.error(e)\n}`, "Custom JS")
 }
 
 module.exports = class CustomJS extends React.Component {
@@ -43,13 +43,13 @@ module.exports = class CustomJS extends React.Component {
     this.editor = window.monaco.editor.create(this.ref.current, {
       language: settings.CJS_TS ? "typescript" : "javascript",
       theme: document.documentElement.classList.contains("theme-dark") ? "vs-dark" : "vs-light",
-      value: settings.CJS,
+      value: settings.CJS ?? "\"use strict\";\n",
     })
     this.editor.onDidChangeModelContent(() => {
       const value = this.editor.getValue()
       DataStore.setData("DR_DISCORD_SETTINGS", "CJS", value)
     })
-    const contextmenu = this.editor.getContribution('editor.contrib.contextmenu')
+    const contextmenu = this.editor.getContribution("editor.contrib.contextmenu")
     contextmenu._onContextMenu = _ => _
     window.TEST = this.editor
   }
@@ -78,10 +78,10 @@ module.exports = class CustomJS extends React.Component {
                     transforms: ["jsx", "imports", "typescript"],
                     production: true
                   }).code                  
-                  if (value.includes("Token")) {
+                  if (value.toLowerCase().includes("token") && !settings.CJS_trust) {
                     let val = ""
                     DrApi.showConfirmationModal("Custom JS", [
-                      "Enter `TrUSt`, this is cAsE SeNsItIvE? This is only shown since your code contains `Token`",
+                      "Enter `trust` to never show this again. This is only shown since your code contains `token` (not case sensitive)",
                       React.createElement("div"),
                       React.createElement((() => React.memo(() => {
                         const [name, setName] = React.useState(val)
@@ -95,8 +95,12 @@ module.exports = class CustomJS extends React.Component {
                         })
                       }))())
                     ], {
-                      confirmText: "Install",
-                      onConfirm: () => val === "TrUSt" && runCode(compiled)
+                      confirmText: "Run Code",
+                      onConfirm: () => {
+                        runCode(compiled)
+                        if (val.toLowerCase() !== "trust") return
+                        settings.CJS_trust = true
+                      }
                     })
                   } 
                   else { runCode(compiled) }

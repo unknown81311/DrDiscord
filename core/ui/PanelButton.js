@@ -5,11 +5,11 @@ const {
 } = DrApi
 
 const SettingsModal = require("./SettingsModal")
-const { openContextMenu, closeContextMenu } = DrApi.find(["openContextMenu"])
-const Menu = DrApi.find(["MenuItem"])
-const PanelButton = DrApi.find("PanelButton")
-const { getGuilds } = DrApi.find(["getGuilds"])
-const Discord = DrApi.find("Discord").default
+const { openContextMenu, closeContextMenu } = DrApi.getModule(["openContextMenu"])
+const Menu = DrApi.getModule(["MenuItem"])
+const PanelButton = DrApi.getModule("PanelButton")
+const { getGuilds } = DrApi.getModule(["getGuilds"])
+const Discord = DrApi.getModule("Discord").default
 
 const Icons = require("./Icons")
 const { info } = require("../../package.json")

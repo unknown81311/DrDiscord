@@ -10,27 +10,27 @@ const {
 const _fs = require("fs")
 const _path = require("path")
 const { React } = DrApi
-const ModalElements = DrApi.find(["ModalRoot"])
+const ModalElements = DrApi.getModule(["ModalRoot"])
 const Flex = {
   Child: FlexChild
-} = DrApi.find("Flex").default
-const SwitchEle = DrApi.find("SwitchItem").default
-const Tooltip = DrApi.find.prototypes("renderTooltip").default
-const FormTitle = DrApi.find("FormTitle").default
-const Text = DrApi.find("Text").default
-const TabBar = DrApi.find("TabBar").default
-const Gear = DrApi.find("Gear").default
+} = DrApi.getModule("Flex").default
+const SwitchEle = DrApi.getModule("SwitchItem").default
+const Tooltip = DrApi.getModule.prototypes("renderTooltip").default
+const FormTitle = DrApi.getModule("FormTitle").default
+const Text = DrApi.getModule("Text").default
+const TabBar = DrApi.getModule("TabBar").default
+const Gear = DrApi.getModule("Gear").default
 const {
   SingleSelect
-} = DrApi.find(["SingleSelect"])
+} = DrApi.getModule(["SingleSelect"])
 const {
   FormItem,
   FormText
-} = DrApi.find(["FormItem", "FormText"])
-const Button = DrApi.find(["ButtonColors"])
-const Switch = DrApi.find("Switch").default
+} = DrApi.getModule(["FormItem", "FormText"])
+const Button = DrApi.getModule(["ButtonColors"])
+const Switch = DrApi.getModule("Switch").default
 const Icons = require("./Icons")
-const TextInput = DrApi.find("TextInput").default
+const TextInput = DrApi.getModule("TextInput").default
 
 const CustomCSS = require("./CustomCSS")
 const CustomJS = require("./CustomJS")
@@ -586,7 +586,7 @@ module.exports = React.memo(({
             tbc,
             setTBC
           }
-        }) : page === 1 ? React.createElement(Plugins, { setContent }) : page === 2 ? React.createElement(Themes) : page === 3 ? React.createElement(CustomCSS) : page === 4 ? React.createElement(Updater) : page === 5 && (DrApi.DataStore("DR_DISCORD_SETTINGS").cjs || false) ? React.createElement(CustomJS) : null : content, ]
+        }) : page === 1 ? React.createElement(Plugins, { setContent }) : page === 2 ? React.createElement(Themes) : page === 3 ? React.createElement(CustomCSS()) : page === 4 ? React.createElement(Updater) : page === 5 && (DrApi.DataStore("DR_DISCORD_SETTINGS").cjs || false) ? React.createElement(CustomJS) : null : content, ]
       })
     ]
   })

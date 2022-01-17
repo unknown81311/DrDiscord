@@ -11,8 +11,12 @@ interface Addon {
   toggle: (name:string) => void
 }
 
+interface getModule {
+  
+}
+
 interface Api {
-  find: (filter:Array<string> | Function) => (any | null) | {
+  getModule: (filter:Array<string> | Function | number | string) => (any | null) | {
     all: (filter:Function) => (any | null)
     byName: (name:string) => (any | null)
     displayName: (name:string) => (any | null) | {
@@ -20,17 +24,16 @@ interface Api {
       typeRender: (type:string) => (any | null)
     }
     getId: (module:object) => number
-    id: (id:number) => (any | null)
-    props: (props:Array<string>) => (any | null) | {
-      all: (props:Array<string>) => (any | null)
-      default: (props:Array<string>) => (any | null)
+    props: (...props:Array<string>) => (any | null) | {
+      all: (...props:Array<string>) => (any | null)
+      default: (...props:Array<string>) => (any | null)
     }
-    prototypes: (prototypes:Array<string>) => (any | null) | {
-      all: (prototypes:Array<string>) => (any | null)
+    prototypes: (...prototypes:Array<string>) => (any | null) | {
+      all: (...prototypes:Array<string>) => (any | null)
     }
     webpackExports: any
-    isDeveloper: Boolean
   }
+  isDeveloper: Boolean
   localHostURL: string
   joinOfficialServer: () => void
   joinServer: (code:string, goTo:boolean) => void
@@ -65,13 +68,13 @@ interface Api {
     }
   }
   openSettings: (page:number, reactElement:any) => number
-  patch: (name:string, module:any, funcName:string, callback:Function, opts:Object) => Function | {
-    after: (name:string, module:any, funcName:string, callback:Function, opts:Object) => Function
-    before: (name:string, module:any, funcName:string, callback:Function, opts:Object) => Function
-    instead: (name:string, module:any, funcName:string, callback:Function, opts:Object) => Function
+  patch: (name:string|Symbol, module:any, funcName:string, callback:Function, opts:Object) => Function | {
+    after: (name:string|Symbol, module:any, funcName:string, callback:Function, opts:Object) => Function
+    before: (name:string|Symbol, module:any, funcName:string, callback:Function, opts:Object) => Function
+    instead: (name:string|Symbol, module:any, funcName:string, callback:Function, opts:Object) => Function
     patches: Array<any>
     quick: (module:any, funcName:string, callback:Function, opts:Object) => Function
-    unpatchAll: (name:string) => void
+    unpatchAll: (name:string|Symbol) => void
   }
   request: (...args:any) => any | any
   showConfirmationModal: (title:string, content?:Array<any>|any, options?:Object) => Number
@@ -88,6 +91,7 @@ interface Api {
     }
     sleep: (ms:number) => Promise<any>
     waitFor: (selector:string) => Promise<Node>
+    waitUntil: (condition:any) => Promise<any>
   }
   styling: {
     addStyle: (name:string, css:string, sass:boolean) => Function
@@ -112,43 +116,10 @@ interface Api {
     openPopout: () => void
   }
   FluxDispatcher:any
-  React: {
-    createElement: (type:string, props:any, ...children:any[]) => any
-    createFactory: (type:string) => any
-    createRef: () => any
-    Fragment: any
-    PureComponent: any
-    StrictMode: any
-    cloneElement: (element:any, props:any, ...children:any[]) => any
-    createContext: (defaultValue:any) => any
-    forwardRef: (render:any) => any
-    isValidElement: (element:any) => boolean
-    lazy: (fn:() => any) => any
-    memo: (type:any, compare?:any) => any
-    useCallback: (callback:any, deps:any[]) => any
-    useContext: (context:any, observedBits:any) => any
-    useDebugValue: (value:any, formatterFn:any) => void
-    useEffect: (effect:any, deps:any[]) => void
-    useImperativeHandle: (ref:any, create:any, deps:any[]) => void
-    useLayoutEffect: (effect:any, deps:any[]) => void
-    useMemo: (callback:any, deps:any[]) => any
-    useReducer: (reducer:any, initialState:any, init:any) => any
-    useRef: (initialValue:any) => any
-    useState: (initialState:any) => any
-    version: string
-  }
-  ReactDOM: {
-    createPortal: (children:any, container:any) => any
-    findDOMNode: (component:any) => any
-    flushSync: (callback:any) => void
-    hydrate: (element:any, container:any, callback:any) => void
-    render: (element:any, container:any, callback:any) => void
-    unmountComponentAtNode: (container:any) => void
-    version: string
-  }
+  React: typeof import("react")
+  ReactDOM: typeof import("react-dom")
 } 
 
-// @ts-nocheck
 declare const DrApi: Api
 
 interface window {

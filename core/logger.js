@@ -1,11 +1,7 @@
 const { info } = require("../package.json")
 
-function logging({
-  type = "info", 
-  title = info.name, 
-  input = undefined
-}) {
-  console[type](`%c[${title}]%c`, ["font-weight: bold", type === "info" && "color: hsl(140, 49.6%, 40%)"].join(";"), "", ...input)
+function logging({ type = "info", title = info.name, input = undefined }) {
+  return console[type](`%c[${title}]%c`, ["font-weight: bold", type === "info" ? "color: hsl(140, 49.6%, 40%)" : ""].join(";"), "", ...input)
 }
 /**
  * @name log
@@ -13,11 +9,7 @@ function logging({
  * @param  {...any} logs 
  */
 function log(title, ...logs) {
-  logging({
-    type: "info", 
-    title: title, 
-    input: logs
-  })
+  return logging({ type: "info", title: title, input: logs })
 }
 /**
  * @name warn
@@ -25,11 +17,7 @@ function log(title, ...logs) {
  * @param  {...any} warns 
  */
 function warn(title, ...warnings) {
-  logging({
-    type: "warn", 
-    title: title, 
-    input: warnings
-  })
+  return logging({ type: "warn", title: title, input: warnings })
 }
 /**
  * @name error
@@ -37,10 +25,6 @@ function warn(title, ...warnings) {
  * @param  {...any} errors 
  */
 function error(title, ...errors) {
-  logging({
-    type: "error", 
-    title: title, 
-    input: errors
-  })
+  return logging({ type: "error", title: title, input: errors })
 }
 module.exports = { log, warn, error, logging }

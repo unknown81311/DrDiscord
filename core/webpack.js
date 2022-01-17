@@ -1,4 +1,5 @@
 const { webFrame } = require("electron")
+const { warn } = require("./logger")
 
 const {
   webpackChunkdiscord_app
@@ -37,6 +38,7 @@ else {
   
   function find(filter) {
     if (typeof filter === "string") return byDisplayName(filter)
+    if (typeof filter === "number") return webpackExports.c[filter]
     if (Array.isArray(filter)) return byProps(...filter)
     return getModule(filter, true)
   }
@@ -112,22 +114,26 @@ else {
     props: byProps,
     prototypes: byPrototypes,
     all: (filter) => getModule(filter, false),
-    id: (id) => webpackExports.c[id],
-    getId: (module) => {
-      let toReturn
-      for (let cs in webpackExports.c)
-        if (webpackExports.c[cs].exports === module) 
-          toReturn = cs
-      return toReturn
-    },
+    getId: (module) => find.exports((m) => m === module)?.[0]?.id,
     webpackExports,
+    exports: (filter, first = false) => {
+      let modules = []
+      for(let ite in webpackExports.c) {
+        if(!Object.hasOwnProperty.call(webpackExports.c, ite)) return
+        let ele = webpackExports.c[ite]
+        if(!ele) continue
+        if(filter(ele)) modules.push(ele)
+      }
+      if (first) return modules[0]
+      return modules
+    },
     byName: (name) => {
-      return global.DrApi.find.all(m => {
+      return global.DrApi.getModule.all(m => {
         if (!m) return
         if (typeof name === "string") name = name.toLowerCase()
         return Object.keys(m).some(n => n && n.toLowerCase().search(name) > -1)
       })
-    },
+    }
   })
   webpackChunkdiscord_app.DRAPI_FIND = find
   module.exports = find

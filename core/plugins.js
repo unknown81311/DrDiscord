@@ -18,7 +18,6 @@ _fs.readdir(_dir, (err, files) => {
     const path = _path.join(_dir, file)
     let meta = {}
     let jsdoc = _fs.readFileSync(path, "utf8").match(/\/\*\*([\s\S]*?)\*\//)[1]
-    console.log(jsdoc);
     for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
       ite = ite.replace("* @", "")
       let split = ite.split(" ")

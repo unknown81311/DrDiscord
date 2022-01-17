@@ -1,80 +1,76 @@
-let patches = {
-  
-}
+let Patch_Symbol = Symbol("DrApi.patch")
+let Quick_Symbol = Symbol("DrApi.patch.quick")
+let Internal_Symbol = Symbol("DrDiscordInternal")
+let ALLpatches = {}
 
-function patch(name, module, funcName, callback, opts = {}) {
-  if (!name) throw new Error("Name is required")
-  if (!module) throw new Error("Module is required")
-  if (!funcName) throw new Error("FuncName is required")
-  if (!callback) throw new Error("Callback is required")
-  let funcExists = true
-  if (!module[funcName]) {
-    module[funcName] = () => {}
-    funcExists = false
+function patch(patchName, moduleToPatch, functionToPatch, callback, patchType) {
+  let originalFunction = moduleToPatch[functionToPatch]
+  if (!originalFunction) {
+    moduleToPatch[functionToPatch] = () => {}
+    originalFunction = moduleToPatch[functionToPatch]
   }
-
-  const { type = "after" } = opts
-  
-  const original = module[funcName]
-
-  if (!module[funcName].__originalFunction) module[funcName].__originalFunction = original
-  if (!module[funcName].__patches) module[funcName].__patches = []
-
-  if (type === "after") module[funcName] = function() {
-    const result = original.apply(this, arguments)
-    callback.apply(this, [[...arguments], result, this])
-    return result
-  }
-  else if (type === "before") module[funcName] = function() {
-    callback.apply(this, [[...arguments], this])
-    return original.apply(this, arguments)
-  }
-  else if (type === "instead") module[funcName] = function() {
-    return callback.apply(this, [[...arguments], original, this])
-  }
-  else throw new Error(`Unknown patch type: ${type}`)
-
-  if (Object.keys(original).length) 
-    for (const key of Object.keys(original)) 
-      module[funcName][key] = original[key]
-  
-  const position = module[funcName].__patches.push([module, funcName, callback, type]) - 1
-  let didUnpatch = false
+  patchType = (patchType ?? "after").toLowerCase()
+  if (!(patchType === "before" || patchType === "after" || patchType === "instead")) throw new Error(`'${patchType}' is a invalid patch type`)
+  let patches = moduleToPatch?.[functionToPatch]?.[Patch_Symbol]?.patches ?? { before: [], after: [], instead: [] }
+  let CallbackSymbol = Symbol()
+  let patchInfo = { unpatch, patchName, moduleToPatch, functionToPatch, callback, patchType, Symbol: CallbackSymbol }
+  patches[patchType].unshift(Object.assign(callback, { unpatch, Symbol: CallbackSymbol }))
+  let DidUnpatch = false
   function unpatch() {
-    if (didUnpatch) return
-    didUnpatch = true
-    if (!funcExists) delete module[funcName]
-    // delete patches[name]
-    module[funcName] = module[funcName].__originalFunction
-    module[funcName].__patches.splice(position, 1)
-    const oldPatches = module[funcName].__patches
-    module[funcName].__patches = []
-    for (const _patch of oldPatches) setImmediate(patch, ..._patch)
+    if (DidUnpatch) return
+    DidUnpatch = true
+    let found = patches[patchType].find(p => p.Symbol === patchInfo.Symbol)
+    let index = patches[patchType].indexOf(found)
+    patches[patchType].splice(index, 1)
+    found = ALLpatches[patchName].find(p => p.Symbol === patchInfo.Symbol)
+    index = ALLpatches[patchName].indexOf(found)
+    ALLpatches[patchName].splice(index, 1)
+    if (!ALLpatches[patchName].length) delete ALLpatches[patchName]
   }
-  if (name.startsWith("DrDiscordInternal") || name === "Quick-Patch") return
+  if (!moduleToPatch[functionToPatch][Patch_Symbol]) {
+    moduleToPatch[functionToPatch] = function() {
+      for (const patch of patches.before) patch([...arguments], this)
+      let insteadFunction = originalFunction
+      for (const patch of patches.instead) insteadFunction = patch([...arguments], insteadFunction, this)
+      let res = insteadFunction.apply(this, [...arguments])
+      for (const patch of patches.after) patch([...arguments], res, this)
+      return res
+    }
+    moduleToPatch[functionToPatch][Patch_Symbol] = {
+      original: originalFunction,
+      module: moduleToPatch,
+      function: functionToPatch,
+      patches, unpatchAll: () => {
+        for (const patch of patches.before) patch.unpatch()
+        for (const patch of patches.instead) patch.unpatch()
+        for (const patch of patches.after) patch.unpatch()
+        moduleToPatch[functionToPatch] = originalFunction
+      }
+    }
+    let keys = Object.keys(originalFunction)
+    for (const key of keys) moduleToPatch[functionToPatch][key] = originalFunction[key]
+  }
+  if (patchName.startsWith && patchName.startsWith("DrDiscordInternal")) {
+    if (!ALLpatches[Internal_Symbol]) ALLpatches[Internal_Symbol] = [patchInfo]
+    else ALLpatches[Internal_Symbol].push(patchInfo)
+  }
   else {
-    if (patches[name]) patches[name].push(unpatch)
-    else patches[name] = [unpatch]
-    return () => unpatch()
+    if (!ALLpatches[patchName]) ALLpatches[patchName] = [patchInfo]
+    else ALLpatches[patchName].push(patchInfo)
   }
+  return unpatch
 }
 
 Object.assign(patch, {
-  before: (name, module, funcName, callback, opts) => patch(name, module, funcName, callback, { ...opts, type: "before" }),
-  after: (name, module, funcName, callback, opts) => patch(name, module, funcName, callback, { ...opts, type: "after" }),
-  instead: (name, module, funcName, callback, opts) => patch(name, module, funcName, callback, { ...opts, type: "instead" }),
-  patches,
-  unpatchAll: (name) => {
-    if (name.startsWith("DrDiscordInternal")) return "DO NOT UNPATCH INTERNAL FUNCTIONS"
-    let Patches = patches[name]
-    if (!Patches) return 
-    for (const Patch of Patches) Patch()
+  before: (patchName, moduleToPatch, functionToPatch, callback) => patch(patchName, moduleToPatch, functionToPatch, callback, "before"),
+  instead: (patchName, moduleToPatch, functionToPatch, callback) => patch(patchName, moduleToPatch, functionToPatch, callback, "instead"),
+  after: (patchName, moduleToPatch, functionToPatch, callback) => patch(patchName, moduleToPatch, functionToPatch, callback, "after"),
+  unpatchAll: function(name) {
+    if (!ALLpatches[name]) return
+    for (let i = ALLpatches[name].length; i > 0; i--) ALLpatches[name][i - 1].unpatch()
   },
-  quick: (...args) => {
-    const patched = patch("Quick-Patch", ...args)
-    delete patches["Quick-Patch"]
-    return patched
-  }
+  quick: (moduleToPatch, functionToPatch, callback, patchType) => patch(Quick_Symbol, moduleToPatch, functionToPatch, callback, patchType),
+  patches: ALLpatches
 })
 
 module.exports = patch

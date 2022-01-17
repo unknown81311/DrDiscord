@@ -3,7 +3,7 @@ const _path = require("path")
 
 const Logger = require("./logger")
 
-class DataStore {
+const storage = new class DataStore {
   get dir() { return _path.join(__dirname, "..", "settings") }
   getFile(name) { return _path.join(this.dir, `${name}.json`) }
   getAllData(name) {
@@ -44,8 +44,6 @@ class DataStore {
     catch (error) { Logger.error("DrDiscord", error) }
   }
 }
-
-const storage = new DataStore
 
 const Storage = (pluginName) => new Proxy(storage.getAllData(pluginName), {
   get: (_, key) => storage.getData(pluginName, key),
