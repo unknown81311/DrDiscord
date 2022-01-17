@@ -149,15 +149,19 @@ else { console.error("No preload path found!") }
     )
     toWindow("console", topWindow.console)
     //
-    let interval = setInterval(async () => {
-      if (!find(["createElement", "Component"])?.createElement) return
-      // clear interval
-      clearInterval(interval)
-      //
-      let depFind = Object.assign((...args) => {
+    START()
+    async function START() {
+      // deprecate 'DrApi.find'
+      await waitUntil(find(["createElement", "Component"])?.createElement)
+      await waitUntil(find(["render", "hydrate"])?.render)
+      let depFind = (...args) => {
         logger.warn("DrDiscord", "'find' is deprecated, use 'getModule' instead")
         return find(...args)
-      }, find)
+      }
+      Object.keys(find).forEach(e => depFind[e] = (...args) => {
+        logger.warn("DrDiscord", "'find' is deprecated, use 'getModule' instead")
+        return find[e](...args)
+      })
       //
       const DrApi = {
         patch, find: depFind, DataStore, Themes, getModule: find,
@@ -387,6 +391,6 @@ else { console.error("No preload path found!") }
           })
         }))
       })
-    }, 100)
+    }
   })
 })(webFrame.top.context)

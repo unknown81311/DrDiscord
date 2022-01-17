@@ -1,6 +1,6 @@
 {
   "name": "discord_re-envisioned",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A discord client mod to allow the user to add plugins and themes to discord",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "update": "npm i && git stash && git pull"
   },
   "author": "Doggybootsy",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "sass": "^1.44.0",
     "sucrase": "^3.20.3"
@@ -21,6 +21,6 @@
   "info": {
     "name": "Discord Re-envisioned",
     "nameShort": "DrDiscord",
-    "version": "1.0.3"
+    "version": "1.0.4"
   }
 }

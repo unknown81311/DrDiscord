@@ -132,11 +132,13 @@ const Updater = React.memo(() => {
 const Form = React.memo(({
   title,
   note,
-  children
+  children,
+  ...other
 }) => {
   return React.createElement(FormItem, {
-    className: "container-2_Tvc_",
+    className: `container-1zDvAE${other.className ? ` ${other.className}` : ""}`,
     title,
+    ...other,
     children: [
       children,
       React.createElement(FormText, {
@@ -144,7 +146,7 @@ const Form = React.memo(({
         type: "description"
       }),
       React.createElement("div", {
-        className: "divider-3573oO dividerDefault-3rvLe-"
+        className: "divider-_0um2u dividerDefault-3C2-ws"
       })
     ]
   });
@@ -219,46 +221,54 @@ const DrSettings = React.memo(({
 
   return React.createElement(React.Fragment, {
     children: [
-      React.createElement(Form, {
-        title: "Page Item's Location",
-        note: "Where to show the page items",
+      React.createElement(Flex, {
         children: [
-          React.createElement(SingleSelect, {
-            options: [{
-              label: "Above",
-              value: 0
-            }, {
-              label: "Header",
-              value: 1
-            }],
-            value: pi || 0,
-            onChange: (val) => {
-              settings.PageItem = val
-              setPI(val)
-            }
-          })
-        ]
-      }),
-      React.createElement(Form, {
-        title: "Tabbar item's",
-        note: "Show only the icons or text or even both",
-        children: [
-          React.createElement(SingleSelect, {
-            options: [{
-              label: "Both",
-              value: 0
-            }, {
-              label: "Icons",
-              value: 1
-            }, {
-              label: "Text",
-              value: 2
-            }],
-            value: tbc || 0,
-            onChange: (val) => {
-              settings.TabBarContent = val
-              setTBC(val)
-            }
+          React.createElement(FlexChild, {
+            children: React.createElement(Form, {
+              title: "Page Item's Location",
+              note: "Where to show the page items",
+              children: [
+                React.createElement(SingleSelect, {
+                  options: [{
+                    label: "Above",
+                    value: 0
+                  }, {
+                    label: "Header",
+                    value: 1
+                  }],
+                  value: pi || 0,
+                  onChange: (val) => {
+                    settings.PageItem = val
+                    setPI(val)
+                  }
+                })
+              ]
+            })
+          }),
+          React.createElement(FlexChild, {
+            children: React.createElement(Form, {
+              title: "Tabbar item's",
+              note: "Show only the icons or text or even both",
+              children: [
+                React.createElement(SingleSelect, {
+                  options: [{
+                    label: "Both",
+                    value: 0
+                  }, {
+                    label: "Icons",
+                    value: 1
+                  }, {
+                    label: "Text",
+                    value: 2
+                  }],
+                  value: tbc || 0,
+                  onChange: (val) => {
+                    settings.TabBarContent = val
+                    setTBC(val)
+                  }
+                })
+              ]
+            })
           })
         ]
       }),
@@ -504,10 +514,10 @@ module.exports = React.memo(({
   PAGE,
   reactElement
 }) => {
-  const [pi, setPI] = React.useState(settings.PageItem || 0)
+  const [pi, setPI] = React.useState(settings.PageItem ?? 0)
   const [customJS, setCustomJS] = React.useState(settings.cjs)
-  const [page, setPage] = React.useState(PAGE || 0)
-  const [tbc, setTBC] = React.useState(settings.TabBarContent === 0 ? 1 : settings.TabBarContent)
+  const [page, setPage] = React.useState(PAGE ?? 0)
+  const [tbc, setTBC] = React.useState(settings.TabBarContent ?? 1)
   const [content, setContent] = React.useState(reactElement)
 
   return React.createElement(ModalElements.ModalRoot, {

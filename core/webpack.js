@@ -7,7 +7,7 @@ const {
 
 if (Boolean(webpackChunkdiscord_app.DRAPI_FIND)) module.exports = webpackChunkdiscord_app.DRAPI_FIND
 else {
-  const webpackExports = webpackChunkdiscord_app.push([["DrDiscord"],{},(e) => e])
+  const webpackExports = webpackChunkdiscord_app.push([["DrDiscord"], {}, (e) => e])
   
   /**
    * @name getModule
@@ -85,7 +85,7 @@ else {
     return getModule(m => protos.every((proto) => typeof m?.default?.prototype?.[proto] !== "undefined"))
   }
   Object.assign(byPrototypes, {
-    all: () => getModule(m => protos.every((proto) => typeof m?.default?.prototype?.[proto] !== "undefined"), false)
+    all: (...protos) => getModule(m => protos.every((proto) => typeof m?.default?.prototype?.[proto] !== "undefined"), false)
   })
   
   /**
@@ -128,13 +128,13 @@ else {
       return modules
     },
     byName: (name) => {
-      return global.DrApi.getModule.all(m => {
+      return find.all(m => {
         if (!m) return
         if (typeof name === "string") name = name.toLowerCase()
         return Object.keys(m).some(n => n && n.toLowerCase().search(name) > -1)
       })
     }
   })
-  webpackChunkdiscord_app.DRAPI_FIND = find
+  webpackChunkdiscord_app.getModule = find
   module.exports = find
 }
