@@ -2,9 +2,10 @@
  * @name DataAttr
  * @description Add data attributes to elements
  * @author Dr.Discord
- * @version 1.0.0
+ * @version 1.0.1
  * @license MIT
  * @ignore false
+ * @update https://raw.githubusercontent.com/Dr-Discord/DrDiscord/main/plugins/Dr-DataAttr.js
  */
 
 let release = DiscordNative.app.getReleaseChannel()
