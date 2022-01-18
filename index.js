@@ -1,15 +1,18 @@
 const { join } = require("path")
 const electron = { ipcMain } = require("electron")
-const { default: installExtension, REACT_DEVELOPER_TOOLS } = require("electron-devtools-installer");
+const { default: installExtension, REACT_DEVELOPER_TOOLS } = require("electron-devtools-installer")
 const Module = require("module")
 const _sass = require("sass")
 const DataStore = require("./core/datastore")
+const fs = require("fs")
 
 const Settings = DataStore("DR_DISCORD_SETTINGS")
 
 electron.app.commandLine.appendSwitch("no-force-async-hooks-checks")
 
 process.env.DRDISCORD_DIR = __dirname
+
+let hasCrashed = false
 
 class BrowserWindow extends electron.BrowserWindow {
   constructor(opt) {
@@ -37,7 +40,9 @@ class BrowserWindow extends electron.BrowserWindow {
         backgroundColor: "#00000000",
       })
     }
-    super(opt)
+    let win = new electron.BrowserWindow(opt)
+    win.webContents.on("render-process-gone", () => hasCrashed = true)
+    return win
   }
 }
 
@@ -51,6 +56,7 @@ function LoadDiscord() {
 
 if (process.argv.includes("--vanilla")) return LoadDiscord()
 
+ipcMain.on("APP_DID_CRASH", (event) => event.returnValue = hasCrashed)
 ipcMain.on("COMPILE_SASS", (event, sass) => {
   let toReturn
   try { toReturn =  _sass.renderSync({ data: sass }).css.toString() } 
@@ -79,10 +85,15 @@ electron.app.once("ready", () => {
   installExtension(REACT_DEVELOPER_TOOLS)
 })
 
-const Electron = new Proxy(electron, { get: (target, prop) => prop === "BrowserWindow" ? BrowserWindow : target[prop] })
+const Electron = {
+  ...electron,
+  BrowserWindow
+}
 
 const electronPath = require.resolve("electron")
 delete require.cache[electronPath].exports
 require.cache[electronPath].exports = Electron
 
-LoadDiscord()
+// Dont start discord if 'app-old' exists, so we let that mod do it's thing
+if (fs.existsSync(join(process.resourcesPath, "app-old"))) require(join(process.resourcesPath, "app-old"))
+else LoadDiscord()

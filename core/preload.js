@@ -1,14 +1,25 @@
 const { webFrame, ipcRenderer } = require("electron")
+const logger = require("./logger")
+
+// crash hangler
+if (ipcRenderer.sendSync("APP_DID_CRASH")) return (() => {
+  logger.error("DrDiscord", "Discord has crashed before so DrDiscord will not load until Discord is restarted.")
+  // Load discords preload
+  const path = process.env.DISCORD_PRELOAD
+  if (path) { require(path) }
+  else { console.error("No preload path found!") }
+})()
+
 const { Module } = _module = require("module")
 
 Module.globalPaths.push(require("path").join(process.resourcesPath, "app.asar/node_modules"))
 
 const _path = require("path")
 const _fs = require("fs")
-const logger = require("./logger")
 const { exec } = require("child_process")
 const request = require("./request")
 const sucrase = require("sucrase")
+const NodeEvents = require("events")
 
 function Compiler(module, filename) {
   const jsx = _fs.readFileSync(filename, "utf8");
@@ -61,6 +72,29 @@ else { console.error("No preload path found!") }
       global[key.name] = key
     }
   }
+  // require
+  toWindow(require)
+  // Add process to window for bd
+  const cloneObject = function (target, newObject = {}, keys) {
+    if (!Array.isArray(keys)) keys = Object.keys(Object.getOwnPropertyDescriptors(target))
+    return keys.reduce((clone, key) => {
+      if (typeof(target[key]) === "object" && !Array.isArray(target[key]) && target[key] !== null && !(target[key] instanceof NodeEvents)) clone[key] = cloneObject(target[key], {})
+      else clone[key] = target[key];
+      return clone
+    }, newObject)
+  }
+  toWindow("process", new class PatchedProcess extends NodeEvents {
+    get __ORIGINAL_PROCESS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED__() { return process }
+  
+    constructor() {
+      super()
+      Object.assign(this,
+        cloneObject(process, {}, Object.keys(NodeEvents.prototype)),
+        cloneObject(process, {})
+      )
+    }
+  })
+  // toWindow("process", process)
   async function waitFor(querySelector) {
     let elem
     while (!(elem = topWindow.document.querySelector(querySelector))) await sleep(1)
@@ -73,33 +107,12 @@ else { console.error("No preload path found!") }
   }
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
     //
-    const { openPopout } = require("./ui/CustomCSS")
+    const { openPopout, openSettings } = require("./ui/CustomCSS")
     //
     document.body.classList.add("DrDiscord")
     //
     const stylingApi = require("./stylings")
     const Themes = require("./themes")
-    // Monaco
-    const requirejsModule = await fetch("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js").then(e => e.text())
-    topWindow.eval(requirejsModule)
-    topWindow.requirejs.config({
-      paths: {
-        "vs": "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs"
-      }
-    })
-    topWindow.MonacoEnvironment = {
-      getWorkerUrl: function (workerId, label) {
-        return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
-          self.MonacoEnvironment = {
-            baseUrl: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/"
-          };
-          importScripts("https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs/base/worker/workerMain.js");`
-        )}`
-      }
-    }
-    topWindow.requirejs(["vs/editor/editor.main"], function () {})
-    // Add node require to window
-    toWindow(require)
     // Add debugger event
     topWindow.addEventListener("keydown", () => event.code === "F8" && (() => {debugger;})())
     // Remove discords warnings
@@ -113,6 +126,7 @@ else { console.error("No preload path found!") }
       textContent: stylingApi.sass(customCSS || ""),
       id: "CUSTOMCSS"
     }))
+    openSettings(customCSS)
     // Add minimal mode
     let minimalMode = DataStore.getData("DR_DISCORD_SETTINGS", "minimalMode")
     if (minimalMode) document.body.classList.toggle("minimal-mode")
@@ -124,30 +138,6 @@ else { console.error("No preload path found!") }
       stylingApi.uninject("DrDiscordStyles")
       stylingApi.inject("DrDiscordStyles", stylingApi.sass({ file: sassStylingFile }))
     })
-    //
-    const Analytics = find(["getSuperPropertiesBase64"])
-    const Reporter = find(["submitLiveCrashReport"])
-    const Handlers = find(["analyticsTrackingStoreMaker"])
-    const Sentry = {
-      main: topWindow.__SENTRY__.hub,
-      client: topWindow.__SENTRY__.hub.getClient()
-    }
-    Analytics.track = () => {}
-    Handlers.AnalyticsActionHandlers.handleTrack = () => {}
-    Reporter.submitLiveCrashReport = () => {}
-    Sentry.client.close()
-    Sentry.main.getStackTop().scope.clear()
-    Sentry.main.getScope().clear()
-    Sentry.main.addBreadcrumb = () => {}
-    Object.assign(topWindow.console, ["debug", "info", "warn", "error", "log", "assert"].forEach((method) => {
-        if (topWindow.console[method].__sentry_original__) {
-          topWindow.console[method] = topWindow.console[method].__sentry_original__
-        } else if (topWindow.console[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__) {
-          topWindow.console[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__ = topWindow.console[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__.__sentry_original__
-        }
-      })
-    )
-    toWindow("console", topWindow.console)
     //
     START()
     async function START() {
@@ -236,7 +226,8 @@ else { console.error("No preload path found!") }
           waitUntil,
           sleep,
           getOwnerInstance,
-          getReactInstance
+          getReactInstance,
+          cloneObject
         },
         isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
       }
@@ -250,8 +241,9 @@ else { console.error("No preload path found!") }
       // Add react stuff
       patch.instead("DrDiscordInternal-require-Patch", _module, "_load", function(request, oldLoad) {
         // Add React and ReactDOM to require
+        function ret(item) { return () => item }
         if (request[0] === "react") return () => React
-        if (request[0] === "reactDOM") return () => ReactDOM
+        if (request[0] === "react-dom") return () => ReactDOM
         // fancy stuff, ex 'require("DrApi/patch/patches")'
         if (request[0].startsWith("DrApi")) return (() => {
           let toReturn = DrApi
@@ -367,6 +359,26 @@ else { console.error("No preload path found!") }
         }
       })
       logger.log("DrDiscord", "Loaded!")
+      // monaco
+      fetch("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js").then(e => e.text()).then(topWindow.eval).then(() => {
+        if (!topWindow.requirejs) return
+        topWindow.requirejs.config({
+          paths: {
+            "vs": "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs"
+          }
+        })
+        topWindow.MonacoEnvironment = {
+          getWorkerUrl: function (workerId, label) {
+            return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+              self.MonacoEnvironment = {
+                baseUrl: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/"
+              };
+              importScripts("https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs/base/worker/workerMain.js");`
+            )}`
+          }
+        }
+        topWindow.requirejs(["vs/editor/editor.main"], function () {})
+      })
       //add cosmetics
       find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
       // Badges
