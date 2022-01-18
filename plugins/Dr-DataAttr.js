@@ -23,6 +23,7 @@ module.exports = new class {
   Guild_Channel_Attr({ channelId, guildId }) {
     // Location
     document.body.setAttribute("data-location", location.pathname) 
+    // Guild
     if (guildId) document.body.setAttribute("data-guild-id", guildId) 
     else document.body.removeAttribute("data-guild-id")
     // Channel
