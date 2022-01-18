@@ -2,6 +2,8 @@
  * Work in process for the custom css editor with settings 
  */
 
+const styling = require("../stylings")
+
 function openSettings(css){
   try{
   const settings = css.match(/:root( +|){((.|\n)*)}/)[0].match(/--dr(.*);/g).map(e=>e.split(/-|;/).flatMap(h=> [h.split(":"), h.split(":").slice(1).join(":")]).filter(n=>n).slice(1))
@@ -34,7 +36,7 @@ function openSettings(css){
     }
   }
   console.log(style);
-  DrApi.styling.insert('CustomCssSettings',`:root{\n${style}}`);
+  styling.inject('CustomCssSettings',`:root{\n${style}}`);
   }catch(e){console.log(e)}
 }
 
