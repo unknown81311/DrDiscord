@@ -224,6 +224,7 @@ const DrSettings = React.memo(({
       React.createElement(Flex, {
         children: [
           React.createElement(FlexChild, {
+            className: "container-1zDvAE flexChild-3PzYmX",
             children: React.createElement(Form, {
               title: "Page Item's Location",
               note: "Where to show the page items",
@@ -246,6 +247,7 @@ const DrSettings = React.memo(({
             })
           }),
           React.createElement(FlexChild, {
+            className: "container-1zDvAE flexChild-3PzYmX",
             children: React.createElement(Form, {
               title: "Tabbar item's",
               note: "Show only the icons or text or even both",

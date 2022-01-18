@@ -25,8 +25,9 @@ _fs.readdir(_dir, (err, files) => {
       let value = split.slice(1).join(" ")
       meta[key] = value
     }
-    const plugin = require(path)
+    if (meta.ignore === "true") return
     meta.file = path
+    const plugin = require(path)
     plugins.push({ plugin, meta })
     if (plugin.onLoad) plugin.onLoad()
     if (DrDiscord.enabledPlugins[meta.name]) plugin.onStart()

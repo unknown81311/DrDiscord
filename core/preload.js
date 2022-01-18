@@ -154,14 +154,9 @@ else { console.error("No preload path found!") }
       // deprecate 'DrApi.find'
       await waitUntil(find(["createElement", "Component"])?.createElement)
       await waitUntil(find(["render", "hydrate"])?.render)
-      let depFind = (...args) => {
-        logger.warn("DrDiscord", "'find' is deprecated, use 'getModule' instead")
-        return find(...args)
-      }
-      Object.keys(find).forEach(e => depFind[e] = (...args) => {
-        logger.warn("DrDiscord", "'find' is deprecated, use 'getModule' instead")
-        return find[e](...args)
-      })
+      // using eval because it looks cleaner
+      let depFind = eval(`(function(...args) {\n  logger.warn("DrApi.find", "'find' is deprecated, use 'getModule' instead")\n  return DrApi.getModule(...args)\n})`)
+      Object.keys(find).forEach(e => depFind[e] = eval(`(function(...args) {\n  logger.warn("DrApi.find.${e}", "'find' is deprecated, use 'getModule' instead")\n  return DrApi.getModule.${e}(...args)\n})`))
       //
       const DrApi = {
         patch, find: depFind, DataStore, Themes, getModule: find,
@@ -337,7 +332,7 @@ else { console.error("No preload path found!") }
       const openSettings = (page, reactElement) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page, reactElement }))
       // Load CC
       request("https://raw.githubusercontent.com/Cumcord/builds/main/build.js", (err, _, body) => {
-        if (err) logger.error(err)
+        if (err) logger.error("DrDiscord:Cumcord", err)
         else {
           let num = 0
           function toggleCC() {
@@ -350,15 +345,15 @@ else { console.error("No preload path found!") }
               return Boolean(num) ? logger.log("DrDiscord", "Enabled CC") : null
             }
           }
-          toWindow("DrApi", Object.assign({}, DrApi, {
-            toggleCC,
-            openSettings,
-            FluxDispatcher
-          }))
+          toWindow("DrApi", Object.assign({}, DrApi, { toggleCC }))
           if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
           num++
         }
       })
+      toWindow("DrApi", Object.assign({}, DrApi, {
+        openSettings,
+        FluxDispatcher
+      }))
       Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
         get: () => global.DrApi.isDeveloper,
         set: (val) => {
