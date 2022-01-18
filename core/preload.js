@@ -68,7 +68,7 @@ else { console.error("No preload path found!") }
   }
   async function waitUntil(condition) {
     let item
-    while (!(item = condition)) await sleep(1)
+    while (!(item = condition())) await sleep(1)
     return item
   }
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
@@ -151,9 +151,14 @@ else { console.error("No preload path found!") }
     //
     START()
     async function START() {
-      // deprecate 'DrApi.find'
-      await waitUntil(find(["createElement", "Component"])?.createElement)
-      await waitUntil(find(["render", "hydrate"])?.render)
+      const React = await waitUntil(() => {
+        if (!find(["createElement", "Component"])?.createElement) return false
+        return find(["createElement", "Component"])
+      })
+      const ReactDOM = await waitUntil(() => {
+        if (!find(["render", "hydrate"])?.render) return false
+        return find(["render", "hydrate"])
+      })
       // using eval because it looks cleaner
       let depFind = eval(`(function(...args) {\n  logger.warn("DrApi.find", "'find' is deprecated, use 'getModule' instead")\n  return DrApi.getModule(...args)\n})`)
       Object.keys(find).forEach(e => depFind[e] = eval(`(function(...args) {\n  logger.warn("DrApi.find.${e}", "'find' is deprecated, use 'getModule' instead")\n  return DrApi.getModule.${e}(...args)\n})`))
@@ -161,8 +166,8 @@ else { console.error("No preload path found!") }
       const DrApi = {
         patch, find: depFind, DataStore, Themes, getModule: find,
         request,
-        React: {...find(["createElement", "Component"])},
-        ReactDOM: {...find(["render", "hydrate"])},
+        React: {...React},
+        ReactDOM: {...ReactDOM},
         styling: {
           insert: (name, css, sass = false) => stylingApi.inject(name, css, sass),
           remove: (name) => stylingApi.uninject(name),
@@ -238,15 +243,15 @@ else { console.error("No preload path found!") }
       toWindow("DrApi", DrApi)
       //
       const {
-        React, modal: {
+        modal: {
           functions: { openModal }
         }
       } = DrApi
       // Add react stuff
       patch.instead("DrDiscordInternal-require-Patch", _module, "_load", function(request, oldLoad) {
         // Add React and ReactDOM to require
-        if (request[0] === "react") return () => DrApi.React
-        if (request[0] === "reactDOM") return () => DrApi.ReactDOM
+        if (request[0] === "react") return () => React
+        if (request[0] === "reactDOM") return () => ReactDOM
         // fancy stuff, ex 'require("DrApi/patch/patches")'
         if (request[0].startsWith("DrApi")) return (() => {
           let toReturn = DrApi

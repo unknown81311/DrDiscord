@@ -2,7 +2,7 @@
  * @name DataAttr
  * @description Add data attributes to elements
  * @author Dr.Discord
- * @version 1.0.1
+ * @version 1.0.0
  * @license MIT
  * @ignore false
  * @update https://raw.githubusercontent.com/Dr-Discord/DrDiscord/main/plugins/Dr-DataAttr.js
@@ -39,7 +39,7 @@ module.exports = new class {
     document.body.setAttribute("data-current-user-id", this.currentUser.id) 
     this.Guild_Channel_Attr({ channelId: this.channelId, guildId: this.currentGuild })
     // Add listener for channel change
-    Flux = await DrApi.util.waitUntil(DrApi.FluxDispatcher)
+    Flux = await DrApi.util.waitUntil(() => DrApi.FluxDispatcher)
     Flux.subscribe("CHANNEL_SELECT", this.Guild_Channel_Attr)
   }
   async onStop() {
@@ -52,7 +52,7 @@ module.exports = new class {
       document.body.removeAttribute(data)
     }
     // Remove listener for channel change
-    Flux = await DrApi.util.waitUntil(DrApi.FluxDispatcher)
+    Flux = await DrApi.util.waitUntil(() => DrApi.FluxDispatcher)
     Flux.unsubscribe("CHANNEL_SELECT", this.Guild_Channel_Attr)
   }
 }
