@@ -74,6 +74,7 @@ Object.assign(request, {
   post: (url, callback) => request({ url: url, method: "POST" }, callback),
   patch: (url, callback) => request({ url: url, method: "PATCH" }, callback),
   delete: (url, callback) => request({ url: url, method: "DELETE" }, callback),
+  del: (url, callback) => request.delete(url, callback),
   head: (url, callback) => request({ url: url, method: "HEAD" }, callback),
   options: (url, callback) => request({ url: url, method: "OPTIONS" }, callback)
 })

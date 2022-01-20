@@ -1,13 +1,14 @@
 const { webFrame, ipcRenderer } = require("electron")
 const logger = require("./logger")
 
+const DISCORD_PRELOAD = ipcRenderer.sendSync("DISCORD_PRELOAD")
+
 // crash hangler
 if (ipcRenderer.sendSync("APP_DID_CRASH")) return (() => {
-  logger.error("DrDiscord", "Discord has crashed before so DrDiscord will not load until Discord is restarted.")
+  logger.error("DrDiscord:ELECTRON", "Discord has crashed before so DrDiscord will not load until Discord is restarted.")
   // Load discords preload
-  const path = process.env.DISCORD_PRELOAD
-  if (path) { require(path) }
-  else { console.error("No preload path found!") }
+  if (DISCORD_PRELOAD) { require(DISCORD_PRELOAD) }
+  else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
 })()
 
 const { Module } = _module = require("module")
@@ -57,9 +58,8 @@ const getOwnerInstance = (element) => {
 }
 
 // Load discords preload
-const path = process.env.DISCORD_PRELOAD
-if (path) { require(path) }
-else { console.error("No preload path found!") }
+if (DISCORD_PRELOAD) { require(DISCORD_PRELOAD) }
+else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
 
 ((topWindow) => {
   const toWindow = (key, value) => {
@@ -72,8 +72,13 @@ else { console.error("No preload path found!") }
       global[key.name] = key
     }
   }
+  // Add window to global and global to window
+  topWindow.global = global
+  global.window = topWindow
   // require
   toWindow(require)
+  // webpackChunkdiscord_app to global
+  global.webpackChunkdiscord_app = topWindow.webpackChunkdiscord_app
   // Add process to window for bd
   const cloneObject = function (target, newObject = {}, keys) {
     if (!Array.isArray(keys)) keys = Object.keys(Object.getOwnPropertyDescriptors(target))
@@ -107,14 +112,16 @@ else { console.error("No preload path found!") }
   }
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
     //
-    const { openPopout, openSettings } = require("./ui/CustomCSS")
+    const { openPopout } = require("./ui/CustomCSS")
     //
     document.body.classList.add("DrDiscord")
     //
     const stylingApi = require("./stylings")
     const Themes = require("./themes")
     // Add debugger event
-    topWindow.addEventListener("keydown", () => event.code === "F8" && (() => {debugger;})())
+    topWindow.addEventListener("keydown", () => event.code === "F8" && (() => {
+      debugger
+    })())
     // Remove discords warnings
     DiscordNative.window.setDevtoolsCallbacks(null, null)
     //
@@ -126,7 +133,7 @@ else { console.error("No preload path found!") }
       textContent: stylingApi.sass(customCSS || ""),
       id: "CUSTOMCSS"
     }))
-    openSettings(customCSS)
+    // openSettings(customCSS)
     // Add minimal mode
     let minimalMode = DataStore.getData("DR_DISCORD_SETTINGS", "minimalMode")
     if (minimalMode) document.body.classList.toggle("minimal-mode")
@@ -239,15 +246,17 @@ else { console.error("No preload path found!") }
         }
       } = DrApi
       // Add react stuff
-      patch.instead("DrDiscordInternal-require-Patch", _module, "_load", function(request, oldLoad) {
+      patch.instead("DrDiscordInternal-require-Patch", _module, "_load", function(args, oldLoad) {
         // Add React and ReactDOM to require
         function ret(item) { return () => item }
-        if (request[0] === "react") return () => React
-        if (request[0] === "react-dom") return () => ReactDOM
+        if (args[0] === "react") return () => React
+        if (args[0] === "react-dom") return () => ReactDOM
+        // Replace OpenAsars request with our own (So it can support http and not log)
+        if (args[0] === "request" && topWindow.openasar) return () => request
         // fancy stuff, ex 'require("DrApi/patch/patches")'
-        if (request[0].startsWith("DrApi")) return (() => {
+        if (args[0].startsWith("DrApi")) return (() => {
           let toReturn = DrApi
-          let splitRes = request[0].split("/")
+          let splitRes = args[0].split("/")
           for (let i = 1; i < splitRes.length; i++) toReturn = toReturn[splitRes[i]]
           return toReturn ? () => toReturn : oldLoad
         })()
@@ -359,28 +368,11 @@ else { console.error("No preload path found!") }
         }
       })
       logger.log("DrDiscord", "Loaded!")
-      // monaco
-      fetch("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js").then(e => e.text()).then(topWindow.eval).then(() => {
-        if (!topWindow.requirejs) return
-        topWindow.requirejs.config({
-          paths: {
-            "vs": "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs"
-          }
-        })
-        topWindow.MonacoEnvironment = {
-          getWorkerUrl: function (workerId, label) {
-            return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
-              self.MonacoEnvironment = {
-                baseUrl: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/"
-              };
-              importScripts("https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs/base/worker/workerMain.js");`
-            )}`
-          }
-        }
-        topWindow.requirejs(["vs/editor/editor.main"], function () {})
-      })
       //add cosmetics
-      find(["getGuild"]).getGuild("864267123694370836")?.features?.add?.("VERIFIED")
+      patch("test", find("GuildTooltip"), "default", ([props], res) => {
+        if (!(props.guild.id === "864267123694370836" && !props.guild.features.has("VERIFIED"))) return
+        props.guild.features.add("VERIFIED")
+      })
       // Badges
       patch("DrDiscordInternal-Badge-Patch", find("UserProfileBadgeList"), "default", ([{user}], res) => {
         const Badge = Badges[user.id]
@@ -402,6 +394,26 @@ else { console.error("No preload path found!") }
             })
           })
         }))
+      })
+      // monaco
+      await fetch("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js").then(e => e.text()).then(eval).then(() => {
+        if (!Object.keys(topWindow).includes("requirejs")) return
+        topWindow.requirejs.config({
+          paths: {
+            vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs"
+          }
+        })
+        topWindow.MonacoEnvironment = {
+          getWorkerUrl: function (workerId, label) {
+            return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+              self.MonacoEnvironment = {
+                baseUrl: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/"
+              };
+              importScripts("https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs/base/worker/workerMain.js");`
+            )}`
+          }
+        }
+        topWindow.requirejs(["vs/editor/editor.main"], function () {})
       })
     }
   })

@@ -16,15 +16,8 @@ let hasCrashed = false
 
 class BrowserWindow extends electron.BrowserWindow {
   constructor(opt) {
-    if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title) return super(opt)
+    if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title || process.argv.includes("--vanilla")) return super(opt)
     const originalPreload = opt.webPreferences.preload
-
-    if (process.argv.includes("--vanilla")) {
-      opt.webPreferences.preload = originalPreload
-      return super(opt)
-    }
-
-    process.env.DISCORD_PRELOAD = originalPreload
 
     opt = Object.assign(opt, {
       webPreferences: {
@@ -34,14 +27,20 @@ class BrowserWindow extends electron.BrowserWindow {
         preload: join(__dirname, "core", "preload.js")
       }
     })
-    if (Settings.transparency) {
-      opt = Object.assign(opt, {
-        transparent: true,
-        backgroundColor: "#00000000",
-      })
-    }
+    if (Settings.transparency) opt = Object.assign(opt, {
+      transparent: true,
+      backgroundColor: "#00000000",
+    })
+
     let win = new electron.BrowserWindow(opt)
     win.webContents.on("render-process-gone", () => hasCrashed = true)
+    
+    ipcMain.on("inspectElement", (event, { x, y }) => {
+      win.webContents.inspectElement(x, y)
+      event.returnValue = true
+    })
+    ipcMain.on("DISCORD_PRELOAD", (event) => event.returnValue = originalPreload)
+
     return win
   }
 }
