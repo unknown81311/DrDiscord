@@ -40,7 +40,7 @@ module.exports = () => {
     Child: FlexChild
   } = DrApi.getModule("Flex").default
 
-  function updateCSSS(){
+  (function updateCSSS(){
     let 
       data = DataStore("DR_DISCORD_SETTINGS").csss,
       style = '';
@@ -48,7 +48,7 @@ module.exports = () => {
       style+=`--dr-${a}:${data[a]};`
     }
     DrApi.styling.update('csss',`:root{${style}}`)
-  }
+  })()
 
   function openSettings(css) { 
     let style = DataStore("DR_DISCORD_SETTINGS").csss||{};
@@ -161,7 +161,6 @@ module.exports = () => {
         }
       }
       try{
-        // use `"` instead of `'` next time please
       let moduleID=openModal(props => {
         return React.createElement(ModalRoot, {
           ...props,
