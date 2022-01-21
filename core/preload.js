@@ -133,6 +133,14 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       textContent: stylingApi.sass(customCSS || ""),
       id: "CUSTOMCSS"
     }))
+    // Add custom css settings
+    let 
+     data = DataStore("DR_DISCORD_SETTINGS").csss,
+      style = '';
+    for (a in data) {
+      style+=`--dr-${a}:${data[a]};`
+    }
+    DrApi.styling.insert('csss',`:root{${style}}`)
     // openSettings(customCSS)
     // Add minimal mode
     let minimalMode = DataStore.getData("DR_DISCORD_SETTINGS", "minimalMode")
