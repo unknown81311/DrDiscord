@@ -40,15 +40,16 @@ module.exports = () => {
     Child: FlexChild
   } = DrApi.getModule("Flex").default
 
-  (function updateCSSS(){
+  function updateCSSS(){
     let 
-      data = DataStore("DR_DISCORD_SETTINGS").csss,
+      data = DataStore("DR_DISCORD_SETTINGS").csss||{},
       style = '';
     for (a in data) {
       style+=`--dr-${a}:${data[a]};`
     }
     DrApi.styling.update('csss',`:root{${style}}`)
-  })()
+  }
+  updateCSSS()
 
   function openSettings(css) { 
     let style = DataStore("DR_DISCORD_SETTINGS").csss||{};
