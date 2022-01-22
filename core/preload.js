@@ -133,15 +133,6 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       textContent: stylingApi.sass(customCSS || ""),
       id: "CUSTOMCSS"
     }))
-    // Add custom css settings
-    let 
-     data = DataStore("DR_DISCORD_SETTINGS").csss,
-      style = '';
-    for (a in data) {
-      style+=`--dr-${a}:${data[a]};`
-    }
-    DrApi.styling.insert('csss',`:root{${style}}`)
-    // openSettings(customCSS)
     // Add minimal mode
     let minimalMode = DataStore.getData("DR_DISCORD_SETTINGS", "minimalMode")
     if (minimalMode) document.body.classList.toggle("minimal-mode")
@@ -376,6 +367,14 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
         }
       })
       logger.log("DrDiscord", "Loaded!")
+      // Add custom css settings
+      let 
+        data = DataStore("DR_DISCORD_SETTINGS").csss,
+        style = '';
+      for (a in data) {
+        style+=`--dr-${a}:${data[a]};`
+      }
+      DrApi.styling.insert('csss',`:root{${style}}`)
       //add cosmetics
       patch("test", find("GuildTooltip"), "default", ([props], res) => {
         if (!(props.guild.id === "864267123694370836" && !props.guild.features.has("VERIFIED"))) return
