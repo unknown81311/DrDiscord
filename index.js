@@ -43,17 +43,19 @@ class BrowserWindow extends electron.BrowserWindow {
     
     ipc("DISCORD_PRELOAD", () => originalPreload)
     ipc("ShowMessageBox", async (ev, opts) => {
-      if (ev.IS_ON) return ev.returnValue = electron.dialog.showMessageBoxSync(opts)
-      return await electron.dialog.showMessageBox(opts)
+      if (ev.IS_ON) return electron.dialog.showMessageBoxSync(win, opts)
+      return await electron.dialog.showMessageBox(win, opts)
     })
     ipc("APP_DID_CRASH", () => hasCrashed)
 
-    if (/\/vizality\/src\/preload\/main.js/.test(originalPreload.replace(/(\/|\\)/, "/"))) electron.dialog.showMessageBoxSync(win, {
-      type: "error",
-      title: "DrDiscord & Vizality",
-      message: "DrDiscord cannot work with Vizality.",
-      detail: "DrDiscord will fully load but Vizality will error."
-    })
+    if (/\/vizality\/src\/preload\/main.js/.test(originalPreload.replace(/(\/|\\)/, "/"))) {
+      electron.dialog.showMessageBoxSync(win, {
+        type: "error",
+        title: "DrDiscord & Vizality",
+        message: "DrDiscord cannot work with Vizality.",
+        detail: "DrDiscord will fully load but Vizality will error."
+      })
+    }
 
     return win
   }
@@ -117,6 +119,6 @@ if (fs.existsSync(appOld)) {
     if (js === `require("${join(__dirname).replace(/(\/|\\)/g, "/")}")`) LoadDiscord()
     else require(join(process.resourcesPath, "app-old"))
   }
-  else require(join(process.resourcesPath, "app-old"))
+  else require(appOld)
 }
 else LoadDiscord()
