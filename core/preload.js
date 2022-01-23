@@ -3,24 +3,34 @@ const logger = require("./logger")
 
 const DISCORD_PRELOAD = ipcRenderer.sendSync("DISCORD_PRELOAD")
 
+function ShowMessageBox(opts) {
+  return ipcRenderer.invoke("ShowMessageBox", opts)
+}
+
 // crash hangler
 if (ipcRenderer.sendSync("APP_DID_CRASH")) return (() => {
   logger.error("DrDiscord:ELECTRON", "Discord has crashed before so DrDiscord will not load until Discord is restarted.")
   // Load discords preload
   if (DISCORD_PRELOAD) { require(DISCORD_PRELOAD) }
   else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
+  // Alert the user
+  ShowMessageBox({
+    type: "error",
+    title: "DrDiscord",
+    message: "Discord has crashed before so DrDiscord will not load until Discord is restarted.",
+    detail: "You do not need to reinstall DrDiscord, just restart discord fully."
+  })
 })()
 
-const { Module } = _module = require("module")
-
-Module.globalPaths.push(require("path").join(process.resourcesPath, "app.asar/node_modules"))
+const _module = require("module")
 
 const _path = require("path")
+_module.globalPaths.push(_path.join(process.resourcesPath, "app.asar/node_modules"))
 const _fs = require("fs")
 const { exec } = require("child_process")
 const request = require("./request")
 const sucrase = require("sucrase")
-const NodeEvents = require("events")
+const patch = require("./patch")
 
 function Compiler(module, filename) {
   const jsx = _fs.readFileSync(filename, "utf8");
@@ -32,11 +42,15 @@ function Compiler(module, filename) {
   module._compile(compiled, filename)
 }
 
-for (const jsType of [".jsx", ".ts", ".tsx"]) {
+for (const jsType of [".jsx", ".ts", ".tsx", ".mjs", ".cjs"]) {
   require.extensions[jsType] = Compiler
   Object.freeze(require.extensions[jsType])
 }
 
+patch.instead("DrDiscordInternal-require-Patch", require.extensions, ".js", ([, filename], old) => {
+  if (filename.startsWith(_path.join(__dirname, "..", "plugins"))) return Compiler
+  return old
+})
 const DataStore = require("./datastore")
 
 logger.log("DrDiscord", "Preloading...")
@@ -53,8 +67,10 @@ const getReactInstance = (element) => {
   return element[Object.keys(element).find(k => k.startsWith("__reactInternalInstance") || k.startsWith("__reactFiber"))] || null
 }
 const getOwnerInstance = (element) => {
-  const sn = element.__reactFiber$?.return?.stateNode
-  if (sn && sn.forceUpdate) return sn
+  for (let RI = getReactInstance(element); RI; RI = RI.return) {
+    const sn = RI.stateNode;
+    if (typeof sn?.forceUpdate === "function") return sn
+  }
 }
 
 // Load discords preload
@@ -79,31 +95,8 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
   toWindow(require)
   // webpackChunkdiscord_app to global
   global.webpackChunkdiscord_app = topWindow.webpackChunkdiscord_app
-  // Add process to window for bd
-  const cloneObject = function (target, newObject = {}, keys) {
-    if (!Array.isArray(keys)) keys = Object.keys(Object.getOwnPropertyDescriptors(target))
-    return keys.reduce((clone, key) => {
-      if (typeof(target[key]) === "object" && !Array.isArray(target[key]) && target[key] !== null && !(target[key] instanceof NodeEvents)) clone[key] = cloneObject(target[key], {})
-      else clone[key] = target[key];
-      return clone
-    }, newObject)
-  }
-  toWindow("process", new class PatchedProcess extends NodeEvents {
-    get __ORIGINAL_PROCESS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED__() { return process }
-  
-    constructor() {
-      super()
-      Object.assign(this,
-        cloneObject(process, {}, Object.keys(NodeEvents.prototype)),
-        cloneObject(process, {})
-      )
-    }
-  })
-  // toWindow("process", process)
   async function waitFor(querySelector) {
-    let elem
-    while (!(elem = topWindow.document.querySelector(querySelector))) await sleep(1)
-    return elem
+    return await waitUntil(() => topWindow.document.querySelector(querySelector))
   }
   async function waitUntil(condition) {
     let item
@@ -125,7 +118,6 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
     // Remove discords warnings
     DiscordNative.window.setDevtoolsCallbacks(null, null)
     //
-    const patch = require("./patch")
     const find = require("./webpack")
     // Add custom css
     let customCSS = DataStore.getData("DR_DISCORD_SETTINGS", "CSS")
@@ -233,7 +225,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
           sleep,
           getOwnerInstance,
           getReactInstance,
-          cloneObject
+          ShowMessageBox
         },
         isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
       }
@@ -332,9 +324,11 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       ele.forceUpdate()
       //
       const FluxDispatcher = find(["_currentDispatchActionType", "_processingWaitQueue"])
+      DrApi.FluxDispatcher = FluxDispatcher
       //
       const SettingsModal = require("./ui/SettingsModal")
       const openSettings = (page, reactElement) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page, reactElement }))
+      DrApi.openSettings = openSettings
       // Load CC
       request("https://raw.githubusercontent.com/Cumcord/builds/main/build.js", (err, _, body) => {
         if (err) logger.error("DrDiscord:Cumcord", err)
@@ -350,15 +344,11 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
               return Boolean(num) ? logger.log("DrDiscord", "Enabled CC") : null
             }
           }
-          toWindow("DrApi", Object.assign({}, DrApi, { toggleCC }))
+          DrApi.toggleCC = toggleCC
           if (DataStore.getData("DR_DISCORD_SETTINGS", "cc")) toggleCC()
           num++
         }
       })
-      toWindow("DrApi", Object.assign({}, DrApi, {
-        openSettings,
-        FluxDispatcher
-      }))
       Object.defineProperty(find(["isDeveloper"]), "isDeveloper", { 
         get: () => global.DrApi.isDeveloper,
         set: (val) => {
@@ -376,7 +366,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       }
       DrApi.styling.insert('csss',`:root{${style}}`)
       //add cosmetics
-      patch("test", find("GuildTooltip"), "default", ([props], res) => {
+      patch("DrDiscordInternal-GuildTooltip-Patch", find("GuildTooltip"), "default", ([props], res) => {
         if (!(props.guild.id === "864267123694370836" && !props.guild.features.has("VERIFIED"))) return
         props.guild.features.add("VERIFIED")
       })

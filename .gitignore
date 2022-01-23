@@ -1,6 +1,11 @@
+# Remove these
 *node_modules
 settings/*
 plugins/*
-!/plugins/Dr-*
 themes/*
 package-lock.json
+DEV
+# Ignore the following files
+!plugins/.exists
+!themes/.exists
+!/plugins/Dr-*.js

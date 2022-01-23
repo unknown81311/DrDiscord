@@ -1,7 +1,8 @@
 const { info } = require("../package.json")
 
 function logging({ type = "info", title = info.name, input = undefined }) {
-  return console[type](`%c[${title}]%c`, ["font-weight: bold", type === "info" ? "color: hsl(140, 49.6%, 40%)" : ""].join(";"), "", ...input)
+  const con = console[type].__sentry_original__ ? console[type].__sentry_original__ : console[type]
+  return con(`%c[${title}]%c`, ["font-weight: bold", type === "info" ? "color: hsl(140, 49.6%, 40%)" : ""].join(";"), "", ...input)
 }
 /**
  * @name log

@@ -31,11 +31,19 @@ const Button = DrApi.getModule(["ButtonColors"])
 const Switch = DrApi.getModule("Switch").default
 const Icons = require("./Icons")
 const TextInput = DrApi.getModule("TextInput").default
-
+const { ActionTypes } = DrApi.getModule(["ActionTypes"])
 const CustomCSS = require("./CustomCSS")
 const CustomJS = require("./CustomJS")
 
 const settings = DataStore("DR_DISCORD_SETTINGS")
+
+function openUserModal(userId) {
+  if (!userId) return 
+  DrApi.FluxDispatcher.dirtyDispatch({
+    type: ActionTypes.USER_PROFILE_MODAL_OPEN,
+    userId
+  })
+}
 
 const Card = React.memo((props) => {
   const {
@@ -69,7 +77,8 @@ const Card = React.memo((props) => {
             }),
             React.createElement("div", {
               className: "Dr-card-header-author",
-              children: meta.author
+              children: meta.author,
+              onClick: () => meta.authorId && openUserModal(meta.authorId)
             })
           ]
         })
@@ -172,7 +181,7 @@ const SwitchItem = React.memo(({
             onClick: (...args) => {
               setReloading(true)
               setTimeout(() => (full_reload ? (() => ipcRenderer.invoke("RESTART_DISCORD")) : location.reload)(), 120)
-                // To not allow it to revert
+              // To not allow it to revert
               onChange(!value)
               oldTtOnClick.apply(this, args)
             }

@@ -6,6 +6,7 @@ const DrDiscord = DataStore("DR_DISCORD_SETTINGS")
 
 if (!DrDiscord.enabledPlugins) DrDiscord.enabledPlugins = {}
 
+const filter = /(\.(c|m|)(j|t)s(x|))$/
 const _dir = _path.join(__dirname, "..", "plugins")
 const plugins = []
 
@@ -15,7 +16,8 @@ function readMeta(contents) {
   let meta = {}
   let jsdoc = contents.match(/\/\*\*([\s\S]*?)\*\//)[1]
   for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
-    ite = ite.replace("* @", "")
+    if (ite.startsWith("* @")) ite = ite.replace("* @", "")
+    else ite = ite.replace("*@", "")
     let split = ite.split(" ")
     let key = split[0]
     let value = split.slice(1).join(" ")
@@ -51,21 +53,17 @@ async function prompt(title, content) {
   })
 }
 
-let mention = DrApi.getModule("UserMention").default
-const Markdown = DrApi.getModule(m => m.default?.displayName === "Markdown" && m.default.rules).default
-const Flex = DrApi.getModule("Flex").default
-let { React } = DrApi
-
 _fs.readdir(_dir, (err, files) => {
   if (err) throw new Error(`Error reading '${_dir}'`)
-  files = files.filter(file => file.endsWith(".js"))
+  files = files.filter(file => filter.test(file))
   for (const file of files) {
     const path = _path.join(_dir, file)
     let meta = readMeta(_fs.readFileSync(path, "utf8"))
     if (meta.ignore === "true") return
     meta.file = path
     function load() {
-      const plugin = require(path)
+      let plugin = require(path)
+      if (plugin.default) plugin = plugin.default
       plugins.push({ plugin, meta })
       if (plugin.onLoad) plugin.onLoad()
       if (DrDiscord.enabledPlugins[meta.name]) plugin.onStart()
@@ -122,6 +120,7 @@ const Plugins = new class {
 }
 
 const watcher = _fs.watch(_dir, {}, (_,f) => {
+  if (!filter.test(f)) return
   const plug = Plugins.getByFileName(f)
   if(Plugins.isEnabled(plug)){
     Plugins.disable(plug)

@@ -1,8 +1,10 @@
-// Modification from OpenAsar's request polyfill to support http
+// Modification from OpenAsar's request polyfill to support http and not log the request
 // Original license: MIT License (c) GooseMod
 // https://github.com/GooseMod/OpenAsar/blob/main/LICENSE
 
-const querystring = require("querystring"), https = require("https"), http = require("http")
+const querystring = require("querystring"), 
+  https = require("https"), 
+  http = require("http")
 
 function requ({ request }, resolve, { method, url, headers, qs, timeout, body, stream }) {
   const fullUrl = `${url}${qs != null ? `?${querystring.stringify(qs)}` : ""}`
@@ -16,22 +18,23 @@ function requ({ request }, resolve, { method, url, headers, qs, timeout, body, s
   })
 }
 
-const nodeReq = ({ method, url, headers, qs, timeout, body, stream }) => {
-  return new Promise((resolve) => {
+async function nodeReq({ method, url, headers, qs, timeout, body, stream }) {
+  return await new Promise((resolve) => {
     let req
     let args = [resolve, { method, url, headers, qs, timeout, body, stream }]
-    try { req = requ(https, ...args) }
-    catch (e) {
+    if (/^https/g.test(url))
+      try { req = requ(https, ...args) }
+      catch (e) {  return resolve(e) }
+    else
       try { req = requ(http, ...args) }
       catch (e) {  return resolve(e) }
-    }
     req.on("error", resolve)
     if (body) req.write(body)
     req.end()
   })
 }
 
-const request = (...args) => {
+function request(...args) {
   let options, callback
   switch (args.length) {
     case 3:
@@ -69,14 +72,8 @@ const request = (...args) => {
   return ret
 }
 
-Object.assign(request, {
-  get: (url, callback) => request({ url: url, method: "GET" }, callback),
-  post: (url, callback) => request({ url: url, method: "POST" }, callback),
-  patch: (url, callback) => request({ url: url, method: "PATCH" }, callback),
-  delete: (url, callback) => request({ url: url, method: "DELETE" }, callback),
-  del: (url, callback) => request.delete(url, callback),
-  head: (url, callback) => request({ url: url, method: "HEAD" }, callback),
-  options: (url, callback) => request({ url: url, method: "OPTIONS" }, callback)
-})
+for (const method of ["GET","POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH" ])
+  request[method] = (url, callback) => request({ url, method }, callback)
+request.del = request.DELETE
 
 module.exports = request

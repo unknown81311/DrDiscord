@@ -10,7 +10,14 @@ const Settings = DataStore("DR_DISCORD_SETTINGS")
 
 electron.app.commandLine.appendSwitch("no-force-async-hooks-checks")
 
-process.env.DRDISCORD_DIR = __dirname
+function ipc(ev, func) {
+  ipcMain.on(ev, (event, ...args) => {
+    event.IS_ON = true
+    const res = func(event, ...args)
+    if (!event.returnValue) event.returnValue = res ?? true
+  })
+  ipcMain.handle(ev, func)
+}
 
 let hasCrashed = false
 
@@ -19,31 +26,40 @@ class BrowserWindow extends electron.BrowserWindow {
     if (!opt || !opt.webPreferences || !opt.webPreferences.preload || !opt.title || process.argv.includes("--vanilla")) return super(opt)
     const originalPreload = opt.webPreferences.preload
 
-    opt = Object.assign(opt, {
-      webPreferences: {
-        contextIsolation: false,
-        enableRemoteModule: true,
-        nodeIntegration: true,
-        preload: join(__dirname, "core", "preload.js")
-      }
+    opt.webPreferences = Object.assign(opt.webPreferences, {
+      contextIsolation: false,
+      enableRemoteModule: true,
+      nodeIntegration: true,
+      preload: join(__dirname, "core", "preload.js")
     })
     if (Settings.transparency) opt = Object.assign(opt, {
       transparent: true,
-      backgroundColor: "#00000000",
+      backgroundColor: "#00000000"
     })
 
     let win = new electron.BrowserWindow(opt)
+
     win.webContents.on("render-process-gone", () => hasCrashed = true)
     
-    ipcMain.on("inspectElement", (event, { x, y }) => {
-      win.webContents.inspectElement(x, y)
-      event.returnValue = true
+    ipc("DISCORD_PRELOAD", () => originalPreload)
+    ipc("ShowMessageBox", async (ev, opts) => {
+      if (ev.IS_ON) return ev.returnValue = electron.dialog.showMessageBoxSync(opts)
+      return await electron.dialog.showMessageBox(opts)
     })
-    ipcMain.on("DISCORD_PRELOAD", (event) => event.returnValue = originalPreload)
+    ipc("APP_DID_CRASH", () => hasCrashed)
+
+    if (/\/vizality\/src\/preload\/main.js/.test(originalPreload.replace(/(\/|\\)/, "/"))) electron.dialog.showMessageBoxSync(win, {
+      type: "error",
+      title: "DrDiscord & Vizality",
+      message: "DrDiscord cannot work with Vizality.",
+      detail: "DrDiscord will fully load but Vizality will error."
+    })
 
     return win
   }
 }
+
+Object.assign(BrowserWindow, electron.BrowserWindow)
 
 function LoadDiscord() {
   const basePath = join(process.resourcesPath, "app.asar")
@@ -55,27 +71,28 @@ function LoadDiscord() {
 
 if (process.argv.includes("--vanilla")) return LoadDiscord()
 
-ipcMain.on("APP_DID_CRASH", (event) => event.returnValue = hasCrashed)
-ipcMain.on("COMPILE_SASS", (event, sass) => {
+ipc("COMPILE_SASS", (event, sass) => {
   let toReturn
   try { toReturn =  _sass.renderSync({ data: sass }).css.toString() } 
   catch (e) { toReturn = e.message }
   event.returnValue = toReturn
+  return toReturn
 })
-ipcMain.handle("RESTART_DISCORD", () => {
+ipc("RESTART_DISCORD", () => {
   electron.app.relaunch()
   electron.app.quit()
 })
-ipcMain.on("POPOUT_WINDOW", (event, { Opts = {}, Url = "https://discord.com/login"}) => {
+ipc("POPOUT_WINDOW", (event, { Opts = {}, Url = "https://discord.com/login", injectJs = "(() => {})()" }) => {
   const win = new BrowserWindow(Opts)
   win.loadURL(Url)
-  event.returnValue = null
+  win.webContents.executeJavaScript(injectJs)
 })
 
 electron.app.once("ready", () => {
   electron.session.defaultSession.webRequest.onHeadersReceived(function({ responseHeaders }, callback) {
-    delete responseHeaders["content-security-policy-report-only"]
-    delete responseHeaders["content-security-policy"]
+    for (const header in responseHeaders)
+      if (header.startsWith("content-security-policy") && Object.hasOwnProperty.call(responseHeaders, header))
+        delete responseHeaders[header]
     callback({ 
       cancel: false, 
       responseHeaders
@@ -85,14 +102,21 @@ electron.app.once("ready", () => {
 })
 
 const Electron = {
-  ...electron,
-  BrowserWindow
+  ...electron, BrowserWindow
 }
 
 const electronPath = require.resolve("electron")
 delete require.cache[electronPath].exports
 require.cache[electronPath].exports = Electron
 
-// Dont start discord if 'app-old' exists, so we let that mod do it's thing
-if (fs.existsSync(join(process.resourcesPath, "app-old"))) require(join(process.resourcesPath, "app-old"))
+// Dont start discord if 'app-old' exists, so we let that mod do it's thing unless its DrDiscord
+const appOld = join(process.resourcesPath, "app-old")
+if (fs.existsSync(appOld)) {
+  if (fs.existsSync(join(appOld, "index.js"))) {
+    const js = fs.readFileSync(join(appOld, "index.js"), "utf8")
+    if (js === `require("${join(__dirname).replace(/(\/|\\)/g, "/")}")`) LoadDiscord()
+    else require(join(process.resourcesPath, "app-old"))
+  }
+  else require(join(process.resourcesPath, "app-old"))
+}
 else LoadDiscord()

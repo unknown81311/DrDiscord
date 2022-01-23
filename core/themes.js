@@ -7,6 +7,7 @@ const DrDiscord = DataStore("DR_DISCORD_SETTINGS")
 
 if (!DrDiscord.enabledThemes) DrDiscord.enabledThemes = {}
 
+const filter = /(\.((s|)(c|a)ss))$/
 const _dir = _path.join(__dirname, "..", "themes")
 
 if (!_fs.existsSync(_dir)) _fs.mkdirSync(_dir)
@@ -15,7 +16,7 @@ const themes = []
 
 _fs.readdir(_dir, (err, files) => {
   if (err) throw new Error(`Error reading '${_dir}'`)
-  files = files.filter(file => file.endsWith(".css") || file.endsWith(".scss"))
+  files = files.filter(file => filter.test(file))
   for (const file of files) {
     const path = _path.join(_dir, file)
     _fs.readFile(path, "utf8", (err, data) => {
@@ -23,7 +24,8 @@ _fs.readdir(_dir, (err, files) => {
       let meta = {}
       let jsdoc = data.match(/\/\*\*([\s\S]*?)\*\//)[1]
       for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
-        ite = ite.replace("* @", "")
+        if (ite.startsWith("* @")) ite = ite.replace("* @", "")
+        else ite = ite.replace("*@", "")
         let split = ite.split(" ")
         let key = split[0]
         let value = split.slice(1).join(" ")
@@ -80,15 +82,16 @@ const Themes = new class {
 }
 
 const watcher = _fs.watch(_dir, {},(_,f)=>{
-  const plug = Themes.getByFileName(f)
-  if(Themes.isEnabled(plug)){
-    Themes.disable(plug)
-    Themes.enable(plug)
+  if (!filter.test(f)) return
+  const them = Themes.getByFileName(f)
+  if(Themes.isEnabled(them)){
+    Themes.disable(them)
+    Themes.enable(them)
   }
 })
 
 module.exports = {
-  getByFileName:(name)=>Themes.getByFileName(name),
+  getByFileName: (name) => Themes.getByFileName(name),
   get: (name) => Themes.get(name),
   getAll: () => Themes.getAll(),
   getEnabled: () => Themes.getEnabled(),

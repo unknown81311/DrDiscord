@@ -2,7 +2,8 @@
  * @name DataAttr
  * @description Add data attributes to elements
  * @author Dr.Discord
- * @version 1.0.0
+ * @authorId 515780151791976453
+ * @version 1.0.1
  * @license MIT
  * @ignore false
  * @update https://raw.githubusercontent.com/Dr-Discord/DrDiscord/main/plugins/Dr-DataAttr.js
@@ -15,7 +16,11 @@ let { getCurrentUser } = DrApi.getModule(["getCurrentUser"])
 let { getChannelId } = DrApi.getModule(["getLastSelectedChannelId", "getChannelId"])
 let { getGuildId } = DrApi.getModule(["getLastSelectedGuildId"])
 
-module.exports = new class {
+export default new class {
+  get Flux() { return () => {
+    if (!DrApi.FluxDispatcher) return null
+    return DrApi.FluxDispatcher
+  }}
   get currentUser() { return getCurrentUser() }
   get channelId() { return getChannelId() }
   get guildId() { return getGuildId() }
@@ -37,22 +42,20 @@ module.exports = new class {
     document.body.setAttribute("data-location", location.pathname) 
     document.body.setAttribute("data-release", release) 
     document.body.setAttribute("data-current-user-id", this.currentUser.id) 
-    this.Guild_Channel_Attr({ channelId: this.channelId, guildId: this.currentGuild })
+    this.Guild_Channel_Attr({ channelId: this.channelId, guildId: this.guildId })
     // Add listener for channel change
-    Flux = await DrApi.util.waitUntil(() => DrApi.FluxDispatcher)
+    Flux = await DrApi.util.waitUntil(this.Flux)
     Flux.subscribe("CHANNEL_SELECT", this.Guild_Channel_Attr)
   }
   async onStop() {
     // Remove attributes
     for (const data of [
-      "data-guild-id", "data-channel-id", 
-      "data-current-user-id", "data-location", 
-      "data-release", "data-platform"
-    ]) {
+      "data-guild-id", "data-channel-id", "data-current-user-id", 
+      "data-location", "data-release", "data-platform" ]) {
       document.body.removeAttribute(data)
     }
     // Remove listener for channel change
-    Flux = await DrApi.util.waitUntil(() => DrApi.FluxDispatcher)
+    Flux = await DrApi.util.waitUntil(this.Flux)
     Flux.unsubscribe("CHANNEL_SELECT", this.Guild_Channel_Attr)
   }
 }

@@ -254,6 +254,9 @@
         margin-bottom: 4px;
         display: flex
       }
+      &-author {
+        width: fit-content;
+      }
       &-name {
         margin-right: 6px;
         font-weight: bold;

@@ -14,7 +14,7 @@ if (process.argv.includes("--install")) {
   if (!_fs.existsSync(_path.join(PATH, "app"))) _fs.mkdirSync(_path.join(PATH, "app"))
 
   _fs.writeFileSync(_path.join(PATH, "app/package.json"), JSON.stringify({ main:"index.js", name:"discord" }))
-  _fs.writeFileSync(_path.join(PATH, "app/index.js"), `require("${_path.join(__dirname).replaceAll("\\", "\\\\")}")`)
+  _fs.writeFileSync(_path.join(PATH, "app/index.js"), `require("${_path.join(__dirname).replace(/(\/|\\)/g, "/")}")`)
 }
 
 if (process.argv.includes("--uninstall")) _fs.rmdirSync(_path.join(PATH, "app"), { recursive: true })

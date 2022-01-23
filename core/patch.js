@@ -3,25 +3,26 @@ let Quick_Symbol = Symbol("DrApi.patch.quick")
 let Internal_Symbol = Symbol("DrDiscordInternal")
 let ALLpatches = {}
 
-function patch(patchName, moduleToPatch, functionToPatch, callback, patchType) {
+function patch(patchName, moduleToPatch, functionToPatch, callback, opts = {}) {
+  let { method = "after", id } = opts
   let originalFunction = moduleToPatch[functionToPatch]
   if (!originalFunction) {
     moduleToPatch[functionToPatch] = () => {}
     originalFunction = moduleToPatch[functionToPatch]
   }
-  patchType = (patchType ?? "after").toLowerCase()
-  if (!(patchType === "before" || patchType === "after" || patchType === "instead")) throw new Error(`'${patchType}' is a invalid patch type`)
+  method = method.toLowerCase()
+  if (!(method === "before" || method === "after" || method === "instead")) throw new Error(`'${method}' is a invalid patch type`)
   let patches = moduleToPatch?.[functionToPatch]?.[Patch_Symbol]?.patches ?? { before: [], after: [], instead: [] }
   let CallbackSymbol = Symbol()
-  let patchInfo = { unpatch, patchName, moduleToPatch, functionToPatch, callback, patchType, Symbol: CallbackSymbol }
-  patches[patchType].unshift(Object.assign(callback, { unpatch, Symbol: CallbackSymbol }))
+  let patchInfo = { unpatch, patchName: id ?? patchName, moduleToPatch, functionToPatch, callback, method, Symbol: CallbackSymbol }
+  patches[method].unshift(Object.assign(callback, { unpatch, Symbol: CallbackSymbol }))
   let DidUnpatch = false
   function unpatch() {
     if (DidUnpatch) return
     DidUnpatch = true
-    let found = patches[patchType].find(p => p.Symbol === patchInfo.Symbol)
-    let index = patches[patchType].indexOf(found)
-    patches[patchType].splice(index, 1)
+    let found = patches[method].find(p => p.Symbol === patchInfo.Symbol)
+    let index = patches[method].indexOf(found)
+    patches[method].splice(index, 1)
     found = ALLpatches[patchName].find(p => p.Symbol === patchInfo.Symbol)
     index = ALLpatches[patchName].indexOf(found)
     ALLpatches[patchName].splice(index, 1)
@@ -62,14 +63,23 @@ function patch(patchName, moduleToPatch, functionToPatch, callback, patchType) {
 }
 
 Object.assign(patch, {
-  before: (patchName, moduleToPatch, functionToPatch, callback) => patch(patchName, moduleToPatch, functionToPatch, callback, "before"),
-  instead: (patchName, moduleToPatch, functionToPatch, callback) => patch(patchName, moduleToPatch, functionToPatch, callback, "instead"),
-  after: (patchName, moduleToPatch, functionToPatch, callback) => patch(patchName, moduleToPatch, functionToPatch, callback, "after"),
+  before: (patchName, moduleToPatch, functionToPatch, callback, opts) => patch(patchName, moduleToPatch, functionToPatch, callback, {
+    method: "before",
+    ...opts
+  }),
+  instead: (patchName, moduleToPatch, functionToPatch, callback, opts) => patch(patchName, moduleToPatch, functionToPatch, callback, {
+    method: "instead",
+    ...opts
+  }),
+  after: (patchName, moduleToPatch, functionToPatch, callback, opts) => patch(patchName, moduleToPatch, functionToPatch, callback, {
+    method: "after",
+    ...opts
+  }),
   unpatchAll: function(name) {
     if (!ALLpatches[name]) return
     for (let i = ALLpatches[name].length; i > 0; i--) ALLpatches[name][i - 1].unpatch()
   },
-  quick: (moduleToPatch, functionToPatch, callback, patchType) => patch(Quick_Symbol, moduleToPatch, functionToPatch, callback, patchType),
+  quick: (moduleToPatch, functionToPatch, callback, opts) => patch(Quick_Symbol, moduleToPatch, functionToPatch, callback, opts),
   patches: ALLpatches
 })
 
