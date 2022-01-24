@@ -218,7 +218,7 @@ module.exports = () => {
                                         cancelText:null, confirmText:'close'
                                       })
                                   },
-                                  children:"how does this world?!"
+                                  children:"how does this work?!"
                                 })
                               ]
                             }),
