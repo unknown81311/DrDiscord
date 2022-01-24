@@ -97,13 +97,14 @@ const Card = React.memo((props) => {
           children: [
             React.createElement("div", {
               className: "Dr-card-footer-left",
-              children: [!props.plugin ? null : (typeof props.plugin.onSettings === "function" && enabled) ? React.createElement("div", {
+              children: [!meta.export ? null : (typeof meta.export.onSettings === "function" && enabled) ? React.createElement("div", {
                 className: "Dr-card-footer-left-settings",
-                onClick: () => props.setContent(props.plugin.onSettings())
-              }, React.createElement(Tooltip, {
-                text: "Settings",
-                children: (ttProps) => React.createElement(Gear, ttProps)
-              })) : null]
+                onClick: () => props.setContent(meta.export.onSettings()),
+                children: React.createElement(Tooltip, {
+                  text: "Settings",
+                  children: (ttProps) => React.createElement(Gear, ttProps)
+                })
+              }) : null]
             }),
             React.createElement("div", {
               className: "Dr-card-footer-switch",
@@ -432,14 +433,13 @@ class Themes extends React.Component {
                 React.createElement(Button.default, {
                   children: "Install",
                   onClick: () => {
-                    const FileName = this.state.url.split('/').pop().split('#')[0].split('?')[0]
-                    if (!(!FileName.endsWith(".css") || !FileName.endsWith(".scss"))) return
-                    DrApi.request(this.state.url, (err, _, body) => {
-                      if (err) throw new Error("Failed to install plugin")
+                    const URL = this.state.url
+                    const FileName = URL.split('/').pop().split('#')[0].split('?')[0]
+                    if (/(\.((s|)(c|a)ss))$/.test(FileName)) return this.setState({ url: "" })
+                    DrApi.request(URL, (err, _, body) => {
+                      if (err) throw new Error("Failed to install theme", err)
                       _fs.writeFileSync(_path.join(DrApi.Themes.folder, FileName), body, "utf8")
-                      this.setState({
-                        url: ""
-                      })
+                      this.setState({ url: "" })
                     })
                   }
                 })
@@ -451,7 +451,7 @@ class Themes extends React.Component {
           className: "Dr-SettingsAddons",
           children: [
             Themes.map(theme => React.createElement(Card, {
-              ...theme,
+              meta: theme,
               type: "Themes",
             }))
           ]
@@ -490,9 +490,10 @@ class Plugins extends React.Component {
                 React.createElement(Button.default, {
                   children: "Install",
                   onClick: () => {
-                    const FileName = this.state.url.split('/').pop().split('#')[0].split('?')[0]
-                    if (!(!FileName.endsWith(".js"))) return
-                    DrApi.request(this.state.url, (err, _, body) => {
+                    const URL = this.state.url
+                    const FileName = URL.split('/').pop().split('#')[0].split('?')[0]
+                    if (!/(\.(c|m|)(j|t)s(x|))$/.test(FileName)) return this.setState({ url: "" })
+                    DrApi.request(URL, (err, _, body) => {
                       if (err) throw new Error("Failed to install plugin")
                       _fs.writeFileSync(_path.join(DrApi.Plugins.folder, FileName), body, "utf8")
                       this.setState({
@@ -508,8 +509,8 @@ class Plugins extends React.Component {
         React.createElement("div", {
           className: "Dr-SettingsAddons",
           children: [
-            Plugins.map(theme => React.createElement(Card, {
-              ...theme,
+            Plugins.map(plugin => React.createElement(Card, {
+              meta: plugin,
               type: "Plugins",
               setContent: this.props.setContent
             }))

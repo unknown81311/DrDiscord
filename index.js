@@ -5,16 +5,20 @@ const Module = require("module")
 const _sass = require("sass")
 const DataStore = require("./core/datastore")
 const fs = require("fs")
+const request = require("./core/request")
 
 const Settings = DataStore("DR_DISCORD_SETTINGS")
 
 electron.app.commandLine.appendSwitch("no-force-async-hooks-checks")
 
+let Badges
+request("https://raw.githubusercontent.com/Dr-Discord/DrDiscord/main/backend/Badges.json", (_, __, body) => Badges = JSON.parse(body))
+
 function ipc(ev, func) {
-  ipcMain.on(ev, (event, ...args) => {
+  ipcMain.on(ev, async (event, ...args) => {
     event.IS_ON = true
-    const res = func(event, ...args)
-    if (!event.returnValue) event.returnValue = res ?? true
+    const res = await func(event, ...args)
+    if (!event.returnValue) event.returnValue = res ?? "No response"
   })
   ipcMain.handle(ev, func)
 }
@@ -43,10 +47,11 @@ class BrowserWindow extends electron.BrowserWindow {
     
     ipc("DISCORD_PRELOAD", () => originalPreload)
     ipc("ShowMessageBox", async (ev, opts) => {
-      if (ev.IS_ON) return electron.dialog.showMessageBoxSync(win, opts)
-      return await electron.dialog.showMessageBox(win, opts)
+      if (ev.IS_ON) return electron.dialog.showMessageBoxSync(opts)
+      return await electron.dialog.showMessageBox(opts)
     })
     ipc("APP_DID_CRASH", () => hasCrashed)
+    ipc("DR_BADGES", () => Badges)
 
     if (/\/vizality\/src\/preload\/main.js/.test(originalPreload.replace(/(\/|\\)/, "/"))) {
       electron.dialog.showMessageBoxSync(win, {

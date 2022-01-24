@@ -242,8 +242,8 @@
     padding: 6px;
     background-color: var(--background-secondary);
     border: 1px solid var(--background-secondary-alt);
-    &:last-child:first-child {
-      width: 200%
+    &:last-child:nth-child(odd) {
+      width: calc(200% - 8px);
     }
     &:hover {
       background-color: var(--background-secondary-alt);

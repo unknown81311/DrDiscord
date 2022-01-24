@@ -51,7 +51,6 @@ module.exports = class CustomJS extends React.Component {
     })
     const contextmenu = this.editor.getContribution("editor.contrib.contextmenu")
     contextmenu._onContextMenu = _ => _
-    window.TEST = this.editor
   }
   render() {
     return this.state.error ? React.createElement("div", null, "An error accord with the monaco editor") : React.createElement("div", {

@@ -114,7 +114,7 @@ else {
     props: byProps,
     prototypes: byPrototypes,
     all: (filter) => getModule(filter, false),
-    getId: (module) => find.exports((m) => m === module)?.[0]?.id,
+    getId: (module) => find.exports((m) => m === module || m.default === module)?.[0]?.id,
     webpackExports,
     exports: (filter, first = false) => {
       let modules = []

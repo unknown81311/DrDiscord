@@ -31,6 +31,7 @@ const { exec } = require("child_process")
 const request = require("./request")
 const sucrase = require("sucrase")
 const patch = require("./patch")
+const package = require(_path.join(__dirname, "..", "package.json"))
 
 function Compiler(module, filename) {
   const jsx = _fs.readFileSync(filename, "utf8");
@@ -46,18 +47,14 @@ for (const jsType of [".jsx", ".ts", ".tsx", ".mjs", ".cjs"]) {
   require.extensions[jsType] = Compiler
   Object.freeze(require.extensions[jsType])
 }
-
 patch.instead("DrDiscordInternal-require-Patch", require.extensions, ".js", ([, filename], old) => {
   if (filename.startsWith(_path.join(__dirname, "..", "plugins"))) return Compiler
   return old
 })
+
 const DataStore = require("./datastore")
 
 logger.log("DrDiscord", "Preloading...")
-
-let Badges
-
-request("https://raw.githubusercontent.com/Dr-Discord/DrDiscord/main/backend/Badges.json", (_, __, body) => Badges = JSON.parse(body))
 
 const sleep = (time) => new Promise(resolve =>
   setTimeout(resolve, time)
@@ -90,7 +87,6 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
   }
   // Add window to global and global to window
   topWindow.global = global
-  global.window = topWindow
   // require
   toWindow(require)
   // webpackChunkdiscord_app to global
@@ -103,14 +99,17 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
     while (!(item = condition())) await sleep(1)
     return item
   }
+  // addonManager
+  const { themes, plugins } = require("./addonManager")
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
+    const Badges = await ipcRenderer.invoke("DR_BADGES")
     //
     const { openPopout } = require("./ui/CustomCSS")
     //
     document.body.classList.add("DrDiscord")
     //
     const stylingApi = require("./stylings")
-    const Themes = require("./themes")
+    const Themes = themes()
     // Add debugger event
     topWindow.addEventListener("keydown", () => event.code === "F8" && (() => {
       debugger
@@ -153,7 +152,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       //
       const DrApi = {
         patch, find: depFind, DataStore, Themes, getModule: find,
-        request,
+        request, 
         React: {...React},
         ReactDOM: {...ReactDOM},
         styling: {
@@ -312,8 +311,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       })
       const ele = getOwnerInstance(await waitFor(".panels-3wFtMD > .container-YkUktl"))
       //
-      let Plugins = require("./plugins")
-      DrApi.Plugins = Plugins
+      DrApi.Plugins = plugins()
       //
       const PanelButton = require("./ui/PanelButton")
       patch("DrDiscordInternal-Panel-Patch", ele.__proto__, "render", (_, res) => {
@@ -374,22 +372,33 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       patch("DrDiscordInternal-Badge-Patch", find("UserProfileBadgeList"), "default", ([{user}], res) => {
         const Badge = Badges[user.id]
         if (!Badge) return
+        function makeChildren(children) {
+          return !children?.map ? null : children.map(child => React.createElement(child.tag, {
+            ...child,
+            fill: child.color,
+            children: makeChildren(child?.children)
+          }))
+        }
         res.props.children.push(React.createElement(find("Tooltip").default, {
           text: Badges[user.id].name, 
           children: (props) => React.createElement(find("Clickable").default, {
             ...props,
             className: "Dr-Badge",
             children: React.createElement(Badge.icon.tag, {
-              width: Badge.icon.width,
-              height: Badge.icon.height,
-              viewBox: Badge.icon.viewBox,
-              color: Badge.icon.color,
-              children: Badge.icon.children.map(child => React.createElement(child.tag, {
-                d: child.d,
-                fill: child.color,
-              }))
+              ...Badge.icon,
+              children: makeChildren(Badge.icon.children)
             })
           })
+        }))
+      })
+      // ClientDebugInfo
+      const Text = find("Text").default
+      patch("rdInternal-ClientDebugInfo-Patch", find("ClientDebugInfo"), "default", (_, { props }) => {
+        props.children.push(React.createElement(Text, {
+          children: `${package.info.name} v${package.info.version}`,
+          color: Text.Colors.MUTED,
+          size: Text.Sizes.SIZE_12,
+          tag: "span"
         }))
       })
       // monaco
@@ -397,9 +406,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
         if (Object.keys(topWindow).includes("monaco") || err) return
         topWindow.eval(body)
         topWindow.requirejs.config({
-          paths: {
-            vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs"
-          }
+          paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs" }
         })
         topWindow.MonacoEnvironment = {
           getWorkerUrl: function (workerId, label) {

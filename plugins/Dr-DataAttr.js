@@ -3,18 +3,20 @@
  * @description Add data attributes to elements
  * @author Dr.Discord
  * @authorId 515780151791976453
- * @version 1.0.1
+ * @version 1.0.2
  * @license MIT
  * @ignore false
  * @update https://raw.githubusercontent.com/Dr-Discord/DrDiscord/main/plugins/Dr-DataAttr.js
  */
 
+import { getModule, util } from "DrApi"
+
 let release = DiscordNative.app.getReleaseChannel()
 let Flux
 
-let { getCurrentUser } = DrApi.getModule(["getCurrentUser"])
-let { getChannelId } = DrApi.getModule(["getLastSelectedChannelId", "getChannelId"])
-let { getGuildId } = DrApi.getModule(["getLastSelectedGuildId"])
+let { getCurrentUser } = getModule(["getCurrentUser"])
+let { getChannelId } = getModule(["getLastSelectedChannelId", "getChannelId"])
+let { getGuildId } = getModule(["getLastSelectedGuildId"])
 
 export default new class {
   get Flux() { return () => {
@@ -44,7 +46,7 @@ export default new class {
     document.body.setAttribute("data-current-user-id", this.currentUser.id) 
     this.Guild_Channel_Attr({ channelId: this.channelId, guildId: this.guildId })
     // Add listener for channel change
-    Flux = await DrApi.util.waitUntil(this.Flux)
+    Flux = await util.waitUntil(this.Flux)
     Flux.subscribe("CHANNEL_SELECT", this.Guild_Channel_Attr)
   }
   async onStop() {
@@ -55,7 +57,7 @@ export default new class {
       document.body.removeAttribute(data)
     }
     // Remove listener for channel change
-    Flux = await DrApi.util.waitUntil(this.Flux)
+    Flux = await util.waitUntil(this.Flux)
     Flux.unsubscribe("CHANNEL_SELECT", this.Guild_Channel_Attr)
   }
 }
