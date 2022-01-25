@@ -34,7 +34,8 @@ class BrowserWindow extends electron.BrowserWindow {
       contextIsolation: false,
       enableRemoteModule: true,
       nodeIntegration: true,
-      preload: join(__dirname, "core", "preload.js")
+      preload: join(__dirname, "core", "preload.js"),
+      devTools: true
     })
     if (Settings.transparency) opt = Object.assign(opt, {
       transparent: true,
