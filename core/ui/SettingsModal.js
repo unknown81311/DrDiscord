@@ -34,6 +34,7 @@ const TextInput = DrApi.getModule("TextInput").default
 const { ActionTypes } = DrApi.getModule(["ActionTypes"])
 const CustomCSS = require("./CustomCSS")
 const CustomJS = require("./CustomJS")
+const Markdown = DrApi.getModule(m => m.default?.displayName === "Markdown" && m.default.rules).default
 
 const settings = DataStore("DR_DISCORD_SETTINGS")
 
@@ -85,8 +86,8 @@ const Card = React.memo((props) => {
       }),
       React.createElement("div", {
         className: "Dr-card-content-wrapper",
-        children: React.createElement("div", {
-          className: "Dr-content-footer",
+        children: React.createElement(Markdown, {
+          className: "Dr-content",
           children: meta.description
         })
       }),

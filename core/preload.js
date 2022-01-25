@@ -405,7 +405,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       request("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js", (err, _, body) => {
         if (Object.keys(topWindow).includes("monaco") || err) return
         topWindow.eval(body)
-        if (!topWindow.requirejs?.config) return
+        if (Object.keys(topWindow).includes("requirejs") && !topWindow.requirejs?.config) return
         topWindow.requirejs.config({
           paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs" }
         })
