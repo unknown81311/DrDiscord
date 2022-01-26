@@ -1,3 +1,10 @@
+const {
+  webFrame: {
+    top: {
+      context: window
+    }
+  }
+} = require("electron")
 module.exports = () => {
   const {
     React,
@@ -15,13 +22,6 @@ module.exports = () => {
       }
     }
   } = global?.DrApi
-  const {
-    webFrame: {
-      top: {
-        context: window
-      }
-    }
-  } = require("electron")
   const DataStore = require("../datastore")
   const settings = DataStore("DR_DISCORD_SETTINGS")
   const button = DrApi.getModule(["ButtonColors"]).default
