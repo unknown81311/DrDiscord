@@ -100,7 +100,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
     return item
   }
   // addonManager
-  const { themes, plugins } = require("./addonManager")
+  const { themes, plugins, readMeta } = require("./addonManager")
   topWindow.document.addEventListener("DOMContentLoaded", async () => {
     const Badges = await ipcRenderer.invoke("DR_BADGES")
     //
@@ -150,6 +150,8 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       let depFind = eval(`(function(...args) {\n  logger.warn("DrApi.find", "'find' is deprecated, use 'getModule' instead")\n  return DrApi.getModule(...args)\n})`)
       Object.keys(find).forEach(e => depFind[e] = eval(`(function(...args) {\n  logger.warn("DrApi.find.${e}", "'find' is deprecated, use 'getModule' instead")\n  return DrApi.getModule.${e}(...args)\n})`))
       //
+      const ModalFunctions = find(["openModal", "openModalLazy"])
+      const ModalElements = find(["ModalRoot", "ModalListContent"])
       const DrApi = {
         patch, find: depFind, DataStore, Themes, getModule: find,
         request, 
@@ -161,9 +163,20 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
           update: (name, css, sass = false) => stylingApi.update(name, css, sass),
           compileSass: (options) => stylingApi.sass(options)
         },
+        modals: {
+          open: (reactElement, modalOpts) => ModalFunctions.openModal(reactElement, modalOpts),
+          close: (modalId, way) => ModalFunctions.closeModal(modalId, way),
+          root: ModalElements.ModalRoot,
+          header: ModalElements.ModalHeader,
+          closeButton: ModalElements.ModalCloseButton,
+          content: ModalElements.ModalContent,
+          listContent: ModalElements.ModalListContent,
+          footer: ModalElements.ModalFooter,
+          size: ModalElements.ModalSize
+        },
         modal: {
-          functions: find(["openModal", "openModalLazy"]),
-          elements: find(["ModalRoot", "ModalListContent"])
+          functions: ModalFunctions,
+          elements: ModalElements
         },
         joinServer: (code, goTo = true) => {
           const { transitionToGuild } = find(["transitionToGuild"])
@@ -195,7 +208,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
           const {onConfirm = emptyFunction, onCancel = emptyFunction, confirmText = Messages.OKAY, cancelText = Messages.CANCEL, danger = false, key = undefined} = options
           if (!Array.isArray(content)) content = [content]
           content = content.map(c => typeof(c) === "string" ? React.createElement(Markdown, null, c) : c)
-          return openModal(props => {
+          return ModalFunctions.openModal(props => {
             return React.createElement(ConfirmationModal, Object.assign({
               header: title,
               confirmButtonColor: danger ? Button.ButtonColors.RED : Button.ButtonColors.BRAND,
@@ -229,12 +242,6 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
         isDeveloper: DataStore.getData("DR_DISCORD_SETTINGS", "isDeveloper")
       }
       toWindow("DrApi", DrApi)
-      //
-      const {
-        modal: {
-          functions: { openModal }
-        }
-      } = DrApi
       // Add react stuff
       patch.instead("DrDiscordInternal-require-Patch", _module, "_load", function(args, oldLoad) {
         // Add React and ReactDOM to require
@@ -263,16 +270,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
         if (props.content.startsWith("/**") && props.lang === "plugin") {
           patch.quick(origRes.props, "render", (_, res) => {
             if (!Array.isArray(res.props.children)) res.props.children = [res.props.children]
-            let meta = {}
-            let jsdoc = props.content.match(/\/\*\*([\s\S]*?)\*\//)[1]
-            for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
-              if (ite.startsWith("* @")) ite = ite.replace("* @", "")
-              else ite = ite.replace("*@", "")
-              let split = ite.split(" ")
-              let key = split[0]
-              let value = split.slice(1).join(" ")
-              meta[key] = value
-            }
+            const meta = readMeta(props.content)
             res.props.children.push(React.createElement("button", {
               className: "Dr-codeblock-add-plugin",
               children: `Install ${meta.name}`,
@@ -325,7 +323,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       DrApi.FluxDispatcher = FluxDispatcher
       //
       const SettingsModal = require("./ui/SettingsModal")
-      const openSettings = (page, reactElement) => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page, reactElement }))
+      const openSettings = (page, reactElement) => ModalFunctions.openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: page, reactElement }))
       DrApi.openSettings = openSettings
       // Load CC
       request("https://raw.githubusercontent.com/Cumcord/builds/main/build.js", (err, _, body) => {
@@ -393,7 +391,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
       })
       // ClientDebugInfo
       const Text = find("Text").default
-      patch("rdInternal-ClientDebugInfo-Patch", find("ClientDebugInfo"), "default", (_, { props }) => {
+      patch("DrDiscordInternal-ClientDebugInfo-Patch", find("ClientDebugInfo"), "default", (_, { props }) => {
         props.children.push(React.createElement(Text, {
           children: `${package.info.name} v${package.info.version}`,
           color: Text.Colors.MUTED,
@@ -406,6 +404,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
         if (Object.keys(topWindow).includes("monaco") || err) return
         topWindow.eval(body)
         if (Object.keys(topWindow).includes("requirejs") && !topWindow.requirejs?.config) return
+        require.config = topWindow.requirejs.config
         topWindow.requirejs.config({
           paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.16.2/min/vs" }
         })

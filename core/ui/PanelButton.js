@@ -1,7 +1,5 @@
 const {
-  React, modal: {
-    functions: { openModal },
-  }
+  React
 } = DrApi
 
 const SettingsModal = require("./SettingsModal")
@@ -18,7 +16,7 @@ const {
 } = require("electron")
 
 function openSettings(PAGE) {
-  openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE }))
+  modals.open(mProps => React.createElement(SettingsModal, { mProps, PAGE }))
 }
 
 const Context = React.memo(({ joined }) => {
@@ -121,7 +119,7 @@ const Button = React.memo(() => {
     onContextMenu: (evt) => openContextMenu(evt, () => React.createElement(Context, {
       joined
     })),
-    onClick: () => openModal(mProps => React.createElement(SettingsModal, { mProps, PAGE: 0 }))
+    onClick: () => modals.open(mProps => React.createElement(SettingsModal, { mProps, PAGE: 0 }))
   })
 })
 

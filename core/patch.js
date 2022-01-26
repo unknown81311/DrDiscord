@@ -48,10 +48,11 @@ function patch(patchName, moduleToPatch, functionToPatch, callback, opts = {}) {
         moduleToPatch[functionToPatch] = originalFunction
       }
     }
-    let keys = Object.keys(originalFunction)
-    for (const key of keys) moduleToPatch[functionToPatch][key] = originalFunction[key]
+    Object.assign(moduleToPatch[functionToPatch], originalFunction, {
+      toString: () => originalFunction.toString()
+    })
   }
-  if (patchName.startsWith && patchName.startsWith("DrDiscordInternal")) {
+  if (patchName.startsWith && /DrDiscordInternal-([A-z]+)-Patch/.test(patchName)) {
     if (!ALLpatches[Internal_Symbol]) ALLpatches[Internal_Symbol] = [patchInfo]
     else ALLpatches[Internal_Symbol].push(patchInfo)
   }

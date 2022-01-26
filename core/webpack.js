@@ -1,13 +1,12 @@
 const { webFrame } = require("electron")
-const { warn } = require("./logger")
 
 const {
   webpackChunkdiscord_app
 } = webFrame.top.context
 
-if (Boolean(webpackChunkdiscord_app.DRAPI_FIND)) module.exports = webpackChunkdiscord_app.DRAPI_FIND
+if (Boolean(webpackChunkdiscord_app.DrApi_getModule)) module.exports = webpackChunkdiscord_app.DrApi_getModule
 else {
-  const webpackExports = webpackChunkdiscord_app.push([["DrDiscord"], {}, (e) => e])
+  const webpackExports = webpackChunkdiscord_app.push([[Symbol("DrDiscord")], {}, (e) => e])
   
   /**
    * @name getModule
@@ -135,6 +134,6 @@ else {
       })
     }
   })
-  webpackChunkdiscord_app.getModule = find
+  webpackChunkdiscord_app.DrApi_getModule = find
   module.exports = find
 }

@@ -31,8 +31,6 @@ class BrowserWindow extends electron.BrowserWindow {
     const originalPreload = opt.webPreferences.preload
 
     opt.webPreferences = Object.assign(opt.webPreferences, {
-      contextIsolation: false,
-      enableRemoteModule: true,
       nodeIntegration: true,
       preload: join(__dirname, "core", "preload.js"),
       devTools: true
@@ -41,7 +39,6 @@ class BrowserWindow extends electron.BrowserWindow {
       transparent: true,
       backgroundColor: "#00000000"
     })
-
     let win = new electron.BrowserWindow(opt)
 
     win.webContents.on("render-process-gone", () => hasCrashed = true)
@@ -76,6 +73,22 @@ function LoadDiscord() {
   electron.app.name = pkg.name
   Module._load(join(basePath, pkg.main), null, true)
 }
+
+// Set DevTools in settings to be true
+const devToolsKey = "DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING"
+if (!global.appSettings) global.appSettings = {}
+if (!global.appSettings?.settings) global.appSettings.settings = {}
+const oldSettings = global.appSettings.settings
+global.appSettings.settings = new Proxy(oldSettings, {
+  get(target, prop) {
+    if (prop === devToolsKey) return true
+    return target[prop]
+  },
+  set(target, prop, value) {
+    if (prop === devToolsKey) return
+    target[prop] = value
+  }
+})
 
 if (process.argv.includes("--vanilla")) return LoadDiscord()
 
@@ -122,7 +135,7 @@ const appOld = join(process.resourcesPath, "app-old")
 if (fs.existsSync(appOld)) {
   if (fs.existsSync(join(appOld, "index.js"))) {
     const js = fs.readFileSync(join(appOld, "index.js"), "utf8")
-    if (js === `require("${join(__dirname).replace(/(\/|\\)/g, "/")}")`) LoadDiscord()
+    if (js.startsWith(`require("${join(__dirname).replace(/(\/|\\)/g, "/")}")`)) LoadDiscord()
     else require(join(process.resourcesPath, "app-old"))
   }
   else require(appOld)

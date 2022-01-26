@@ -9,18 +9,17 @@ DrDiscord.enabledThemes = DrDiscord.enabledThemes || {}
 DrDiscord.enabledPlugins = DrDiscord.enabledPlugins || {}
 
 async function prompt(title, content) {
-  const { React, getModule, modal } = DrApi
+  const { React, getModule, modals } = DrApi
   const ConfirmationModal = getModule("ConfirmModal").default
   const Button = getModule(["ButtonColors"])
   const { Messages } = getModule(m => m.default?.Messages?.OKAY).default
-  const { openModal } = modal.functions
   const Markdown = getModule(m => m.default?.displayName === "Markdown" && m.default.rules).default
 
   if (!Array.isArray(content)) content = [content]
   content = content.map(c => typeof(c) === "string" ? React.createElement(Markdown, null, c) : c)
 
   return new Promise((resolve) => {
-    openModal(props => {
+    modals.open(props => {
       if (props.transitionState === 3) resolve(false)
       return React.createElement(ConfirmationModal, Object.assign({
         header: title,
