@@ -2,7 +2,6 @@ const {
   React
 } = DrApi
 
-const SettingsModal = require("./SettingsModal")
 const { openContextMenu, closeContextMenu } = DrApi.getModule(["openContextMenu"])
 const Menu = DrApi.getModule(["MenuItem"])
 const PanelButton = DrApi.getModule("PanelButton")
@@ -15,10 +14,6 @@ const {
   ipcRenderer
 } = require("electron")
 
-function openSettings(PAGE) {
-  modals.open(mProps => React.createElement(SettingsModal, { mProps, PAGE }))
-}
-
 const Context = React.memo(({ joined }) => {
   return React.createElement(Menu.default, {
     onClose: closeContextMenu,
@@ -27,31 +22,31 @@ const Context = React.memo(({ joined }) => {
       React.createElement(Menu.MenuItem, {
         id: "settings",
         label: "Settings",
-        action: () => openSettings(0),
+        action: () => DrApi.openSettings(0),
         children: [
           React.createElement(Menu.MenuItem, {
             id: "settings-plugins",
             label: "Plugins",
             icon: () => React.createElement(Icons.Plugins),
-            action: () => openSettings(1)
+            action: () => DrApi.openSettings(1)
           }),
           React.createElement(Menu.MenuItem, {
             id: "settings-themes",
             label: "Themes",
             icon: () => React.createElement(Icons.Themes),
-            action: () => openSettings(2)
+            action: () => DrApi.openSettings(2)
           }),
           React.createElement(Menu.MenuItem, {
             id: "settings-custom-css",
             label: "Custom CSS",
             icon: () => React.createElement(Icons.CustomCSS),
-            action: () => openSettings(3)
+            action: () => DrApi.openSettings(3)
           }),
           React.createElement(Menu.MenuItem, {
             id: "settings-updater",
             label: "Updater",
             icon: () => React.createElement(Icons.Updater),
-            action: () => openSettings(4)
+            action: () => DrApi.openSettings(4)
           }),
         ]
       }),
@@ -119,7 +114,7 @@ const Button = React.memo(() => {
     onContextMenu: (evt) => openContextMenu(evt, () => React.createElement(Context, {
       joined
     })),
-    onClick: () => modals.open(mProps => React.createElement(SettingsModal, { mProps, PAGE: 0 }))
+    onClick: () => DrApi.openSettings(0)
   })
 })
 
