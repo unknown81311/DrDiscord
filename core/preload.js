@@ -193,7 +193,7 @@ else { logger.error("DrDiscord:ELECTRON", "No Discord preload was found.") }
           else global.DrApi.joinServer("XkQMaw34")
         },
         updateDrDiscord: () => {
-          exec(`cd ${process.env.DRDISCORD_DIR} && npm run update`, function(err, res) {
+          exec(`cd ${_path.join(__dirname, "..")} && npm run update`, function(err, res) {
             if (err) console.error(err)
             else ipcRenderer.invoke("RESTART_DISCORD")
           })
