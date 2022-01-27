@@ -3,9 +3,10 @@
 settings/*
 plugins/*
 themes/*
+backend/*
 package-lock.json
 DEV
 # Ignore the following files
 !plugins/.exists
 !themes/.exists
-!/plugins/Dr-*.js
+!plugins/Dr-*.js
