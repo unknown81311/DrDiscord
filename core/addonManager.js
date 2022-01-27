@@ -51,8 +51,9 @@ const addonsInit = {
 
 function readMeta(contents) {
   let meta = {}
-  let jsdoc = contents.match(/\/\*\*([\s\S]*?)\*\//)[1]
-  for (let ite of jsdoc.match(/\*\s([^\n]*)/g)) {
+  let jsdoc = contents.match(/\/\*\*([\s\S]*?)\*\//)
+  if (!jsdoc?.[1]) return meta
+  for (let ite of jsdoc[1].match(/\*\s([^\n]*)/g)) {
     ite = ite.replace(/\*( +|)@/, "")
     let split = ite.split(" ")
     let key = split[0]
@@ -65,6 +66,7 @@ function updatePlugin(meta, load) {
   request(meta.update, async function(err, res, body) {
     if (err) return console.log(err)
     let newMeta = readMeta(body)
+    if (!newMeta.version) return load()
     let version = Number(newMeta.version.replace(/\./g, ""))
     let pluginVersion = Number(meta.version.replace(/\./g, ""))
     if (!(pluginVersion < version)) return load()
@@ -157,8 +159,8 @@ fs.readdir(pluginDir, (err, files) => {
           if (DrDiscord.enabledPlugins[meta.name]) plugin.onStart()
           return plugin
         }
-        if (meta.update) updatePlugin(meta, load)
-        else load()
+        if (typeof(meta.update) === "undefined") load()
+        else updatePlugin(meta, load)
       })
     })
   }

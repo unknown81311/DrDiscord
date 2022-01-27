@@ -149,30 +149,44 @@
 }
 // Minimal mode
 .minimal-mode {
+  .privateChannels-oVe7HL > .scroller-WSmht3 > .content-2a4AW9 {
+    & > a:not([href*="/channels/@me/"]) {
+      &:first-of-type {  margin-left: 8px !important }
+      .content-1U25dZ { display: none }
+      .avatar-6qzftW { margin: 0 !important }
+      .children-283-lq {
+        position: absolute;
+        transform: translate(4px, 8px);
+        box-shadow: 0 0 0 3px var(--background-secondary);
+        border-radius: 100px
+      }
+      flex-grow: 1;
+      margin-top: 8px !important; 
+      margin-left: 0
+    } 
+    & > a[href*="/channels/@me/"] { width: 100% }
+    & > h2 { width: 100% }
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start
+  }
   .membersWrap-3NUR2t {
-    min-width: 200px;
-    .members-3WRCEx {
-      width: 200px;
-    }
+    .members-3WRCEx { width: 200px }
+    min-width: 200px
   }
   .sidebar-1tnWFu {
-    width: 200px;
-    .bannerVisible-Vkyg1I ~ .scroller-1ox3I2 [style="height: 84px;"]{
-      height: 47.25px !important
-    }
+    .bannerVisible-Vkyg1I ~ .scroller-1ox3I2 [style="height: 84px;"] { height: 47.25px !important }
     .bannerImage-ubW8K-, .animatedContainer-2laTjx, .bannerImg-2PzH6z {
       width: 200px;
       height: 112.5px
     }
+    width: 200px
   }
-  .container-1eD8xH {
-    margin-top: 7px;
-  }
+  .container-1eD8xH { margin-top: 7px }
   .panels-3wFtMD {
-    z-index: 4;
     & > .container-YkUktl {
       position: relative;
-      .flex-1xMQg5 {
+      .flex-2S1XBF {
         background-color: var(--background-secondary-alt);
         padding: 4px;
         border-radius: 4px;
@@ -182,25 +196,16 @@
         grid-gap: 4px;
         transform: translateY(18px);
         &:hover {
-          transform: translateY(-18px);
-          & > button {
-            &:not(:last-child):not(:first-child) {
-              display: block;
-            }
-          }
+          & > button:not(:last-child):not(:first-child) { display: block }
+          transform: translateY(-18px)
         }
         & > button {
-          &:first-child {
-            order: 1;
-          }
-          &:last-child {
-            order: 2;
-          }
-          &:not(:last-child):not(:first-child) {
-            display: none;
-          }
+          &:first-child { order: 1 }
+          &:last-child { order: 2 }
+          &:not(:last-child):not(:first-child) { display: none }
         }
       }
+      z-index: 4
     }
     .standardSidebarView-E9Pc3j {
       .sidebarRegion-1VBisG {
