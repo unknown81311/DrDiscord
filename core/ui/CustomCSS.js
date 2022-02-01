@@ -54,7 +54,7 @@ module.exports = () => {
   function openSettings(css) { 
     let style = DataStore("DR_DISCORD_SETTINGS").csss||{};
     setVal=(ID,VAL,DEFAULT)=>{
-      style[ID]=VAL||DEFAULT;
+      style[ID]=VAL??DEFAULT;
       DataStore.setData("DR_DISCORD_SETTINGS", "csss", style)
       updateCSSS();
     }
@@ -119,12 +119,12 @@ module.exports = () => {
                 children:[
                   React.createElement(text,{ children: ["value for:"+set[1]] }),
                   React.createElement(React.memo(() => {
-                    let [enabled, setEnabled] = React.useState(style[set[1]]===true||parseFloat(set[2]))
+                    let [enabled, setEnabled] = React.useState(parseFloat(style[set[1]])??parseFloat(set[2]))
                     return [React.createElement(Switch, {
                       checked:enabled,
                       onChange:e=>{
                         setEnabled(!enabled);
-                        setVal(set[1],enabled,parseFloat(set[2]));
+                        setVal(set[1],!enabled?"1":"0",parseFloat(set[2]));
                       }
                     })]
                   }),{})
