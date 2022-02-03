@@ -74,10 +74,11 @@ module.exports = () => {
                 children:[
                   React.createElement(text,{ children: ["value for:"+set[1]] }),
                   React.createElement(TextInput,{
-                    onInput:e=>{
-                      setVal(set[1],e.target.value,set[2])
+                    defaultValue:style[set[1]]||'',
+                    onChange:e=>{
+                      setVal(set[1],e,set[2])
                     },
-                    placeholder:style[set[1]]||set[2]
+                    placeholder:set[2]
                   })
                 ]
               }))
